@@ -1,0 +1,101 @@
+model {
+    dependencyConfigs {
+        chipobject(DependencyConfig) {
+            groupId = 'edu.wpi.first.ni-libraries'
+            artifactId = 'chipobject'
+            headerClassifier = 'headers'
+            ext = 'zip'
+            version = '2019.12.1'
+            sharedConfigs = project.sharedNiConfigs
+            staticConfigs = [:]
+        }
+        netcomm(DependencyConfig) {
+            groupId = 'edu.wpi.first.ni-libraries'
+            artifactId = 'netcomm'
+            headerClassifier = 'headers'
+            ext = 'zip'
+            version = '2019.12.1'
+            sharedConfigs = project.sharedNiConfigs
+            staticConfigs = [:]
+        }
+        hal(DependencyConfig) {
+            groupId = 'edu.wpi.first.hal'
+            artifactId = 'hal-cpp'
+            headerClassifier = 'headers'
+            sourceClassifier = 'sources'
+            ext = 'zip'
+            version = '2019.+'
+            sharedConfigs = project.sharedBaseConfigs
+            staticConfigs = [:]
+        }
+        wpiutil(DependencyConfig) {
+            groupId = 'edu.wpi.first.wpiutil'
+            artifactId = 'wpiutil-cpp'
+            headerClassifier = 'headers'
+            sourceClassifier = 'sources'
+            ext = 'zip'
+            version = '2019.+'
+            sharedConfigs = project.sharedBaseConfigs
+            staticConfigs = [:]
+        }
+        ntcore(DependencyConfig) {
+            groupId = 'edu.wpi.first.ntcore'
+            artifactId = 'ntcore-cpp'
+            headerClassifier = 'headers'
+            sourceClassifier = 'sources'
+            ext = 'zip'
+            version = '2019.+'
+            sharedConfigs = project.sharedConfigs
+            staticConfigs = [:]
+        }
+        cscore(DependencyConfig) {
+            groupId = 'edu.wpi.first.cscore'
+            artifactId = 'cscore-cpp'
+            headerClassifier = 'headers'
+            sourceClassifier = 'sources'
+            ext = 'zip'
+            version = '2019.+'
+            sharedConfigs = project.sharedConfigs
+            staticConfigs = [:]
+        }
+        wpilibc(DependencyConfig) {
+            groupId = 'edu.wpi.first.wpilibc'
+            artifactId = 'wpilibc-cpp'
+            headerClassifier = 'headers'
+            sourceClassifier = 'sources'
+            ext = 'zip'
+            version = '2019.+'
+            sharedConfigs = project.sharedConfigs
+            staticConfigs = [:]
+        }
+        cameraserver(DependencyConfig) {
+            groupId = 'edu.wpi.first.cameraserver'
+            artifactId = 'cameraserver-cpp'
+            headerClassifier = 'headers'
+            sourceClassifier = 'sources'
+            ext = 'zip'
+            version = '2019.+'
+            sharedConfigs = project.sharedConfigs
+            staticConfigs = [:]
+        }
+        opencv(DependencyConfig) {
+            groupId = 'edu.wpi.first.thirdparty.frc2019.opencv'
+            artifactId = 'opencv-cpp'
+            headerClassifier = 'headers'
+            ext = 'zip'
+            version = '3.4.3-19'
+            sharedConfigs = project.sharedConfigs
+            staticConfigs = [:]
+        }
+    }
+}
+
+dependencies {
+    compile 'edu.wpi.first.cscore:cscore-java:2019.+'
+    compile 'edu.wpi.first.cameraserver:cameraserver-java:2019.+'
+    compile 'edu.wpi.first.ntcore:ntcore-java:2019.+'
+    compile 'edu.wpi.first.wpilibj:wpilibj-java:2019.+'
+    compile 'edu.wpi.first.wpiutil:wpiutil-java:2019.+'
+    compile 'edu.wpi.first.hal:hal-java:2019.+'
+    compile 'edu.wpi.first.thirdparty.frc2019.opencv:opencv-java:3.4.3-19'
+}

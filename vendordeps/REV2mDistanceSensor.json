@@ -1,0 +1,24 @@
+{
+    "fileName": "REV2mDistanceSensor.json",
+    "name": "REV2mDistanceSensor",
+    "version": "0.0.1",
+    "uuid": "3f48eb8c-50fe-43a6-9cb7-44c86353c4cb",
+    "mavenUrls": [
+        "http://www.revrobotics.com/content/sw/max/sdk/maven/"
+    ],
+    "jsonUrl": "http://www.revrobotics.com/content/sw/max/sdk/REVRobotics.json",
+    "cppDependencies": [
+        {
+            "groupId": "com.revrobotics.frc",
+            "artifactId": "DistanceSensor-cpp",
+            "version": "0.0.1",
+            "libName": "libDistanceSensor",
+            "headerClassifier": "headers",
+            "sharedLibrary": false,
+            "skipInvalidPlatforms": true,
+            "binaryPlatforms": [
+                "linuxathena"
+            ]
+        }
+    ]
+}

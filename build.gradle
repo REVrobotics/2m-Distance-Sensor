@@ -1,0 +1,52 @@
+plugins {
+  id 'cpp'
+  id 'java'
+  id 'edu.wpi.first.wpilib.versioning.WPILibVersioningPlugin' version '2.2'
+  id 'edu.wpi.first.NativeUtils' version '2.1.2'
+  id 'edu.wpi.first.GradleJni' version '0.3.1'
+  id 'edu.wpi.first.GradleVsCode' version '0.7.1'
+}
+
+apply from: 'config.gradle'
+
+ext.sharedNiConfigs = [DistanceSensor: ['linux:athena']]
+ext.sharedBaseConfigs = [DistanceSensor: []]
+ext.sharedConfigs = [DistanceSensor: []]
+
+apply from: 'dependencies.gradle'
+
+model {
+  exportsConfigs {
+      DistanceSensor(ExportsConfig) {
+          x86ExcludeSymbols = ['_CT??_R0?AV_System_error', '_CT??_R0?AVexception', '_CT??_R0?AVfailure',
+                                '_CT??_R0?AVbad_cast',
+                                '_CT??_R0?AVruntime_error', '_CT??_R0?AVsystem_error', '_CTA5?AVfailure',
+                                '_TI5?AVfailure']
+          x64ExcludeSymbols = ['_CT??_R0?AV_System_error', '_CT??_R0?AVexception', '_CT??_R0?AVfailure',
+                                '_CT??_R0?AVbad_cast',
+                                '_CT??_R0?AVruntime_error', '_CT??_R0?AVsystem_error', '_CTA5?AVfailure',
+                                '_TI5?AVfailure']
+      }
+  }
+  components {
+    DistanceSensor(NativeLibrarySpec) {
+      sources {
+        cpp {
+          source {
+            srcDirs 'src/main/native/cpp'
+            include '**/*.cpp', '**/*.c'
+          }
+          exportedHeaders {
+            srcDirs 'src/main/native/include'
+          }
+        }
+      }
+    }
+  }
+}
+
+apply from: 'publish.gradle'
+
+wrapper {
+  gradleVersion = '5.0'
+}
