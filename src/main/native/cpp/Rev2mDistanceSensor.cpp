@@ -16,6 +16,7 @@
 #include <frc/Utility.h>
 
 #define USE_I2C_2V8
+//#define _DEBUG_
 
 using namespace rev;
 
@@ -28,30 +29,6 @@ void print_pal_error(VL53L0X_Error Status){
     char buf[VL53L0X_MAX_STRING_LENGTH];
     VL53L0X_GetPalErrorString(Status, buf);
     printf("API Status: %i : %s\n", Status, buf);
-}
-
-void print_range_status(VL53L0X_RangingMeasurementData_t* pRangingMeasurementData){
-    char buf[VL53L0X_MAX_STRING_LENGTH];
-    uint8_t RangeStatus;
-
-    /*
-     * New Range Status: data is valid when pRangingMeasurementData->RangeStatus = 0
-     */
-
-    RangeStatus = pRangingMeasurementData->RangeStatus;
-
-    VL53L0X_GetRangeStatusString(RangeStatus, buf);
-    printf("Range Status: %i : %s\n", RangeStatus, buf);
-
-}
-
-void PrintDeviceInfo(VL53L0X_DeviceInfo_t *DeviceInfo) {
-    printf("VL53L0X_GetDeviceInfo:\n");
-    printf("Device Name : %s\n", DeviceInfo->Name);
-    printf("Device Type : %s\n", DeviceInfo->Type);
-    printf("Device ID : %s\n", DeviceInfo->ProductId);
-    printf("ProductRevisionMajor : %d\n", DeviceInfo->ProductRevisionMajor);
-    printf("ProductRevisionMinor : %d\n", DeviceInfo->ProductRevisionMinor);
 }
 
 Rev2mDistanceSensor::Rev2mDistanceSensor(Port port, int deviceAddress, DistanceUnit units)
@@ -87,54 +64,93 @@ bool Rev2mDistanceSensor::IsRangeValid() const {
     return m_rangeValid;
 }
 
-double Rev2mDistanceSensor::GetRangeMM(uint8_t *stat) {
-    *stat = pRangingMeasurementData->RangeStatus;
-    return pRangingMeasurementData->RangeMilliMeter;
+double Rev2mDistanceSensor::GetRange(DistanceUnit units) {
+    if(units == kCurrent)
+        units = m_units;
+
+    switch (units) {
+        case Rev2mDistanceSensor::kInches:
+            return GetRangeInches();
+        case Rev2mDistanceSensor::kMilliMeters:
+            return GetRangeMM();
+        default:
+            return -1;
+    }
 }
 
-double Rev2mDistanceSensor::GetRangeInches(uint8_t *stat) {
-    return GetRangeMM(stat) / 25.4;
+double Rev2mDistanceSensor::GetTimestamp(void) {
+    return m_timestamp;
+}
+
+double Rev2mDistanceSensor::GetRangeMM() {
+    return m_currentRange;
+}
+
+double Rev2mDistanceSensor::GetRangeInches() {
+    return m_currentRange / 25.4;
 }
 
 void Rev2mDistanceSensor::SetEnabled(bool enable) { m_enabled = enable; }
 
-void Rev2mDistanceSensor::PrintRangeStatus(void) {
-    print_range_status(pRangingMeasurementData);
-}
+void Rev2mDistanceSensor::SetRangeProfile(RangeProfile profile) {
+    uint32_t budget;
 
-bool Rev2mDistanceSensor::SetMeasurementTimingBudget(uint32_t budget_us) {
-    if(m_automaticEnabled) {
-        frc::DriverStation::ReportWarning("Measurement timing budget cannot be updated "
-                                            "while autonomous is running");
-
-        return false;
+    if (profile == RangeProfile::kHighAccuracy) {
+        m_profile = RangeProfile::kHighAccuracy;
+        budget = 200000;
+    }
+    else if (profile == RangeProfile::kLongRange) {
+        m_profile = RangeProfile::kLongRange;
+        budget = 33000;
+    }
+    else if (profile == RangeProfile::kHighSpeed) {
+        m_profile = RangeProfile::kLongRange;
+        budget = 20000;
+    }
+    else {
+        m_profile = RangeProfile::kLongRange;
+        budget = 20000;
     }
 
+    if(m_stopped) {
+        #ifdef _DEBUG_
+        printf("Sensor stopped. Setting timing budget\n");
+        #endif
+        SetMeasurementTimingBudget(budget);
+    }
+    else {
+        #ifdef _DEBUG_
+        printf("Sensor disabled. Setting budget to %d\n", budget);
+        #endif
+        m_enabled = false;
+        m_newMeasurementTimingBudget = budget;
+    }
+}
+
+void Rev2mDistanceSensor::SetMeasurementTimingBudget(uint32_t budget_us) {
     Status = VL53L0X_SetMeasurementTimingBudgetMicroSeconds(pDevice, budget_us);
-    return Status == 0;
+
+    if(Status == VL53L0X_ERROR_NONE) {
+        m_currentMeasurementTimingBudget = budget_us;
+        m_newMeasurementTimingBudget = budget_us;
+        #ifdef _DEBUG_
+        printf("Timing budget changed to %dus\n", m_currentMeasurementTimingBudget);
+        #endif
+    }
+    else {
+        #ifdef _DEBUG_
+        printf("Error setting timing buget\n");
+        #endif
+    }
 }
 
 bool Rev2mDistanceSensor::GetMeasurementTimingBudget(uint32_t *budget_us) {
-    if(m_automaticEnabled) {
-        frc::DriverStation::ReportWarning("Measurement timing budget cannot be updated "
-                                            "while autonomous is running");
-
-        return false;
-    }
-
     Status = VL53L0X_GetMeasurementTimingBudgetMicroSeconds(pDevice, budget_us);
 
     return Status == 0;
 }
 
 void Rev2mDistanceSensor::SetMeasurementPeriod(double period) {
-    if(m_automaticEnabled) {
-        frc::DriverStation::ReportWarning("Measurement period cannot be updated "
-                                            "while autonomous is running");
-
-        return;
-    }
-
     if(period < 0.01) {
         period = 0.01;
     } 
@@ -161,7 +177,7 @@ bool Rev2mDistanceSensor::Initialize(void) {
     uint8_t VhvSettings;
     uint8_t PhaseCal;
     
-    #ifdef  _DEBUG
+    #ifdef  _DEBUG_
     printf("Initializing device on port: ");
     if(m_port == HAL_I2C_kOnboard)
         printf("Onboard\n");
@@ -170,22 +186,20 @@ bool Rev2mDistanceSensor::Initialize(void) {
     #endif
 
     if(ValidateI2C() != true)
-        frc::DriverStation::ReportError("Error communicating with 2M sensor over I2C.");
+        frc::DriverStation::ReportError("Error communicating with Rev 2M sensor over I2C.");
 
     VL53L0X_Version_t *pVersion = new VL53L0X_Version_t;
     Status = VL53L0X_GetVersion(pVersion);
-    #ifdef  _DEBUG
-    if(Status != VL53L0X_ERROR_NONE)
-    {
+    #ifdef  _DEBUG_
+    if(Status != VL53L0X_ERROR_NONE) {
         frc::DriverStation::ReportError("Version error.");
         print_pal_error(Status);
     }
     #endif
 
     Status = VL53L0X_DataInit(pDevice); // Data initialization
-    #ifdef _DEBUG
-    if(Status != VL53L0X_ERROR_NONE)
-    {
+    #ifdef _DEBUG_
+    if(Status != VL53L0X_ERROR_NONE) {
         frc::DriverStation::ReportError("Data init error.");
         print_pal_error(Status);
     }
@@ -193,47 +207,41 @@ bool Rev2mDistanceSensor::Initialize(void) {
 
     VL53L0X_DeviceInfo_t *pDeviceInfo = new VL53L0X_DeviceInfo_t;
     Status = VL53L0X_GetDeviceInfo(pDevice, pDeviceInfo);
-    #ifdef _DEBUG
-    if(Status != VL53L0X_ERROR_NONE)
-    {
+    #ifdef _DEBUG_
+    if(Status != VL53L0X_ERROR_NONE) {
         frc::DriverStation::ReportError("Get device info error.");
         print_pal_error(Status);
     }
     #endif
     
     Status = VL53L0X_StaticInit(pDevice); // Device Initialization
-    #ifdef _DEBUG
-    if(Status != VL53L0X_ERROR_NONE)
-    {
+    #ifdef _DEBUG_
+    if(Status != VL53L0X_ERROR_NONE) {
         frc::DriverStation::ReportError("Static init error.");
         print_pal_error(Status);
     }
     #endif
     
     Status = VL53L0X_PerformRefCalibration(pDevice, &VhvSettings, &PhaseCal); // Device Initialization
-    #ifdef _DEBUG
-    if(Status != VL53L0X_ERROR_NONE)
-    {
+    #ifdef _DEBUG_
+    if(Status != VL53L0X_ERROR_NONE) {
         frc::DriverStation::ReportError("Static init error.");
         print_pal_error(Status);
     }
     #endif
 
     Status = VL53L0X_PerformRefSpadManagement(pDevice, &refSpadCount, &isApertureSpads); // Device Initialization
-    #ifdef _DEBUG
-    if(Status != VL53L0X_ERROR_NONE)
-    {
+    #ifdef _DEBUG_
+    if(Status != VL53L0X_ERROR_NONE) {
         frc::DriverStation::ReportError("Erroring performing ref spad management.");
         print_pal_error(Status);
     }
     #endif
 
-    Status = VL53L0X_SetMeasurementTimingBudgetMicroSeconds(pDevice, 20000);
-    #ifdef _DEBUG
-    if(Status != VL53L0X_ERROR_NONE)
-    {
-        frc::DriverStation::ReportError("Error setting timing budget.");
-        print_pal_error(Status);
+    Status = VL53L0X_SetDeviceMode(pDevice, VL53L0X_DEVICEMODE_CONTINUOUS_RANGING);
+    #ifdef _DEBUG_
+    if(Status != VL53L0X_ERROR_NONE) {
+        frc::DriverStation::ReportWarning("Error starting Rev 2M sensor\n");
     }
     #endif
 
@@ -258,7 +266,6 @@ bool Rev2mDistanceSensor::ValidateI2C(void) {
     if(*res != 0xAA)
         return false;
 
-
     reg = 0xC2;
     HAL_TransactionI2C(pDevice->port, pDevice->I2cDevAddr >> 1, &reg, 1, res, 1);
 
@@ -267,13 +274,6 @@ bool Rev2mDistanceSensor::ValidateI2C(void) {
 
     reg = 0x51;
     HAL_TransactionI2C(pDevice->port, pDevice->I2cDevAddr >> 1, &reg, 1, res, 2);
-
-    #ifdef _DEBUG
-    if((res[0] != 0x00) || (res[1] != 0x99))
-    {
-        frc::DriverStation::ReportWarning("Device not in default settings.");
-    }
-    #endif
 
     reg = 0x61;
     HAL_TransactionI2C(pDevice->port, pDevice->I2cDevAddr >> 1, &reg, 1, res, 2);
@@ -292,43 +292,54 @@ void Rev2mDistanceSensor::SetAutomaticMode(bool enabling)
 
     m_automaticEnabled = enabling;
 
+    // if automatic is being enabled
     if(enabling) {
-        // command devices to automatic mode
-        for(auto& sensor : m_sensors)
-        {
-            Status = VL53L0X_SetDeviceMode(sensor->pDevice, VL53L0X_DEVICEMODE_CONTINUOUS_RANGING);
-            if(Status == VL53L0X_ERROR_NONE) {
-                // command device to start measurement
-                Status = VL53L0X_StartMeasurement(sensor->pDevice);
-                sensor->m_stopped = false;
-            } 
-            #ifdef _DEBUG
-            else {
-                frc::DriverStation::ReportWarning("Error setting automatic mode\n");
-            }
-            #endif
-        }
-
+        // if thread is not currently running, start it
         if(!m_thread.joinable())
+            #ifdef _DEBUG_
+            printf("Starting thread\n");
+            #endif
             m_thread = std::thread(&Rev2mDistanceSensor::DoContinuous);
-    } else {
+    } 
+    // else automatic mode is being disabled
+    else {
         m_automaticEnabled = false;
+
+        // disable all sensors
+        for(auto& sensor : m_sensors)
+            sensor->SetEnabled(false);
     }
 }
 
 void Rev2mDistanceSensor::DoContinuous(void) {
     VL53L0X_Error stat = VL53L0X_ERROR_NONE;
+    VL53L0X_RangingMeasurementData_t *pRangingMeasurementData = new VL53L0X_RangingMeasurementData_t;
     uint8_t NewDatReady = 0;
+    bool allStopped;
 
-    while(1)
-    {
+    #ifdef _DEBUG_
+    printf("Thread started\n");
+    #endif
+
+    do {
+        // used to stop loop. allStopped will be changed to false if any sensors still running
+        allStopped = true;
+
         // iterate through sensors
         for(auto& sensor : m_sensors)
         {
-            // if automatic is enabled
-            if(m_automaticEnabled) {
-                // if current sensor is enabled
-                if(sensor->IsEnabled()) {
+            // if sensor is enabled
+            if(sensor->IsEnabled()) {
+                // if sensor has not been started yet
+                if(sensor->m_stopped) {
+                    // command device to start measurement
+                    stat = VL53L0X_StartMeasurement(sensor->pDevice);
+
+                    if(stat == VL53L0X_ERROR_NONE)
+                        sensor->m_stopped = false;
+                }
+                // else sensor has been started
+                else {
                     // check for new data
                     stat = VL53L0X_GetMeasurementDataReady(sensor->pDevice, 
                                                             &NewDatReady);
@@ -336,12 +347,15 @@ void Rev2mDistanceSensor::DoContinuous(void) {
                     // if new data is ready
                     if((NewDatReady == 0x01) && (stat == VL53L0X_ERROR_NONE)) {
                         stat = VL53L0X_GetRangingMeasurementData(sensor->pDevice, 
-                                    sensor->pRangingMeasurementData);
+                                    pRangingMeasurementData);
                         VL53L0X_ClearInterruptMask(sensor->pDevice, 
                                     VL53L0X_REG_SYSTEM_INTERRUPT_GPIO_NEW_SAMPLE_READY);
 
                         if(stat == VL53L0X_ERROR_NONE) {
-                            sensor->m_rangeValid = true;
+                            // range is valid when RangeStatus equals 0
+                            sensor->m_rangeValid = pRangingMeasurementData->RangeStatus == 0;
+                            sensor->m_currentRange = pRangingMeasurementData->RangeMilliMeter;
+                            sensor->m_timestamp = frc::Timer::GetFPGATimestamp();
                         } else {
                             sensor->m_rangeValid = false;
                         }
@@ -351,54 +365,67 @@ void Rev2mDistanceSensor::DoContinuous(void) {
                 }
             } 
             // else automatic is not enabled
-            else {
-                // if sensor is not yet stopped
-                if(!sensor->IsStopped()) {
-                    // if sensor is not currently stopping
-                    if(!sensor->m_stopping) {
-                        stat = VL53L0X_StopMeasurement(sensor->pDevice);
+            else if(!sensor->m_stopped) {
+                // if sensor is not currently stopping
+                if(!sensor->m_stopping) {
+                    // command device to stop measurements
+                    stat = VL53L0X_StopMeasurement(sensor->pDevice);
 
-                        if(stat == VL53L0X_ERROR_NONE) {
-                            sensor->m_stopping = true;
-                        }
-                    }
-                    // else sensor is currently stopping
-                    else {
-                        // check if sensor has finished
-                        uint32_t StopCompleted = 0;
-                        stat = VL53L0X_GetStopCompletedStatus(sensor->pDevice, &StopCompleted);
+                    if(stat == VL53L0X_ERROR_NONE)
+                        sensor->m_stopping = true;
+                }
+                // else sensor is currently stopping
+                else {
+                    // check if sensor has finished
+                    uint32_t StopCompleted = 0;
+                    stat = VL53L0X_GetStopCompletedStatus(sensor->pDevice, &StopCompleted);
 
-                        if ((StopCompleted == 0x00) || stat != VL53L0X_ERROR_NONE) {
-                            sensor->m_stopped = true;
-                            stat = VL53L0X_ClearInterruptMask(sensor->pDevice, 
-                                        VL53L0X_REG_SYSTEM_INTERRUPT_GPIO_NEW_SAMPLE_READY);
-                        }
+                    if ((StopCompleted == 0x00) || stat != VL53L0X_ERROR_NONE) {
+                        sensor->m_stopped = true;
+                        sensor->m_stopping = false;
+                        stat = VL53L0X_ClearInterruptMask(sensor->pDevice, 
+                                    VL53L0X_REG_SYSTEM_INTERRUPT_GPIO_NEW_SAMPLE_READY);
                     }
                 }
             }
+            // else if sensor is stopped and measurement timing budget needs to be changed
+            else if(sensor->m_newMeasurementTimingBudget != sensor->m_currentMeasurementTimingBudget) {
+                sensor->SetMeasurementTimingBudget(sensor->m_newMeasurementTimingBudget);
+
+                if(sensor->m_newMeasurementTimingBudget == sensor->m_currentMeasurementTimingBudget) {
+                    // if timing budget is successfully set, reenable sensor
+                    sensor->m_enabled = true;
+                }
+            }
+
+            // check if there are any sensors still enabled
+            if(!sensor->m_stopped)
+                allStopped = false;
         }
 
         frc::Wait(m_measurementPeriod);
     }
-}
+    while(!allStopped && m_automaticEnabled);
 
-bool Rev2mDistanceSensor::IsStopped(void) {
-    return m_stopped;
+    #ifdef _DEBUG_
+    printf("Stopping thread\n");
+    #endif
+
+    // all sensors stopped and automatic is disabled so detach thread
+    m_thread.detach();
 }
 
 void Rev2mDistanceSensor::InitSendable(frc::SendableBuilder& builder) {
-    uint8_t *stat;
     builder.SetSmartDashboardType("Distance");
-    builder.AddDoubleProperty("Value", [=]() { return GetRangeInches(stat); }, nullptr);
+    builder.AddDoubleProperty("Value", [=]() { return GetRange(); }, nullptr);
 }
 
 double Rev2mDistanceSensor::PIDGet() {
-    uint8_t stat;
     switch (m_units) {
         case Rev2mDistanceSensor::kInches:
-            return GetRangeInches(&stat);
+            return GetRangeInches();
         case Rev2mDistanceSensor::kMilliMeters:
-            return GetRangeMM(&stat);
+            return GetRangeMM();
         default:
             return 0.0;
     }

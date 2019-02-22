@@ -34,7 +34,8 @@ namespace rev {
 class Rev2mDistanceSensor : public frc::ErrorBase, public frc::SendableBase, public frc::PIDSource {
     public:
         enum Port { kOnboard = 0, kMXP };
-        enum DistanceUnit { kInches = 0, kMilliMeters = 1 };
+        enum DistanceUnit { kInches = 0, kMilliMeters = 1, kCurrent = 2 };
+        enum RangeProfile { kDefault = 0, kHighAccuracy, kLongRange, kHighSpeed };
 
         /**
          * Creat an instance of the Distance Sensor.
@@ -52,6 +53,9 @@ class Rev2mDistanceSensor : public frc::ErrorBase, public frc::SendableBase, pub
 
         /**
          * Check if the device is enabled in round robin mode
+         * 
+         * @return  True - Device enabled
+         *          False - Device disabled
          */
         bool IsEnabled() const;
 
@@ -71,44 +75,29 @@ class Rev2mDistanceSensor : public frc::ErrorBase, public frc::SendableBase, pub
         void SetAutomaticMode(bool enabling);
 
         /**
-         * TODO: Figure out if this is needed or if it is better to use
-         * pRangingMeasurementData->RangeStatus;
+         * Determine if the current range is valid.
+         * 
+         * @ return True - current range is valid
+         *          False - current range is not valid
          */
         bool IsRangeValid() const;
 
         /**
-         * Get the range in millimeters from the sensor.
+         * Get the range in current units from the sensor.
          * 
-         * @param stat  pointer to uint8_t that will contain the current measurement
-         *              status.
-         *                  255 NONE
-         *                  5 HW fail
-         *                  4 Phase fail
-         *                  3 Min range
-         *                  2 Signal Fail
-         *                  1 Sigma Fail
-         *                  0 Range Valid
+         * @param units Units in which the measurement will be returned
          * 
-         * @return     current range in millimeters.
+         * @return current range in default or user specified units.
          */
-        double GetRangeMM(uint8_t* stat);
+        double GetRange(DistanceUnit units = kCurrent);
 
         /**
-         * Get the range in inches from the sensor.
+         * Get the timestamp of the current measurement. 
+         * Uses frc::Timer::GetFPGATimestamp()
          * 
-         * @param stat  pointer to uint8_t that will contain the current measurement
-         *              status.
-         *                  255 NONE
-         *                  5 HW fail
-         *                  4 Phase fail
-         *                  3 Min range
-         *                  2 Signal Fail
-         *                  1 Sigma Fail
-         *                  0 Range Valid
-         * 
-         * @return     current range in inches.
+         * @return  timestamp of current measurement
          */
-        double GetRangeInches(uint8_t* stat);
+        double GetTimestamp(void);
 
         /**
          * Enable/disable the sensor in round robin scheduling. Automatic mode
@@ -122,30 +111,22 @@ class Rev2mDistanceSensor : public frc::ErrorBase, public frc::SendableBase, pub
         void SetEnabled(bool enable);
 
         /**
-         * Print the status of the current range measurement.
+         * Sets the range profile for the sensor. Valid options are:
+         *      kDefault
+         *      kHighAccuracy
+         *      kLongRange
+         *      kHighSpeed
+         * 
+         * Range profiles are based on timing budgets defined in the VL53L0X
+         * datasheet
+         * 
+         * If called in automatic mode, the sensor will be stopped until the
+         * new profile is set. Measurements will not be available during this
+         * period
+         * 
+         * @param RangeProfile The range profile to set in the sensor
          */
-        void PrintRangeStatus(void);
-
-        /**
-         * Set the range timing budget for the sensor.
-         * 
-         * @param budget_us The max timing budget in microseconds
-         * 
-         * @return  Will return true if budget is successfully set,
-         *          false otherwise.
-         */
-        bool SetMeasurementTimingBudget(uint32_t budget_us);
-
-        /**
-         * Get the range timing budget from the sensor.
-         * 
-         * @param budget_us Pointer to uint32_t that will contain
-         *                  the buget read back from the sensor
-         * 
-         * @return  Will return true if budget was successfully read,
-         *          false otherwise.
-         */
-        bool GetMeasurementTimingBudget(uint32_t*);
+        void SetRangeProfile(RangeProfile);
 
         /**
          * Set the measurement period for the round robin scheduling loop.
@@ -194,22 +175,30 @@ class Rev2mDistanceSensor : public frc::ErrorBase, public frc::SendableBase, pub
         bool Initialize(void);
         static void DoContinuous(void);
         bool ValidateI2C(void);
-        bool IsStopped(void);
+        double GetRangeMM(void);
+        double GetRangeInches(void);
+        void SetMeasurementTimingBudget(uint32_t budget_us);
+        bool GetMeasurementTimingBudget(uint32_t*);
         HAL_I2CPort m_port = HAL_I2C_kInvalid;
         int m_deviceAddress;
         VL53L0X_Error Status = VL53L0X_ERROR_NONE;
         VL53L0X_Dev_t *pDevice = new VL53L0X_Dev_t;
-        VL53L0X_RangingMeasurementData_t *pRangingMeasurementData = new VL53L0X_RangingMeasurementData_t;
         bool m_rangeValid = false;
-        static std::atomic<double> m_measurementPeriod;
-        static std::thread m_thread;
-        static std::vector<Rev2mDistanceSensor*> m_sensors;
-        static std::atomic<bool> m_automaticEnabled;
-
+        double m_currentRange = -1;
         bool m_enabled = false;
         bool m_stopped = true;
         bool m_stopping = false;
         DistanceUnit m_units;
+        RangeProfile m_profile;
+        uint32_t m_currentMeasurementTimingBudget = 30000;
+        uint32_t m_newMeasurementTimingBudget = 30000;
+        double m_timestamp;
+
+        static std::atomic<double> m_measurementPeriod;
+        static std::thread m_thread;
+        static std::vector<Rev2mDistanceSensor*> m_sensors;
+        static std::atomic<bool> m_automaticEnabled;
+        static std::atomic<bool> dontKillme;
 };
 
 }  // namespace rev
