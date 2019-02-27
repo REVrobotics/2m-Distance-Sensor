@@ -14,8 +14,8 @@
 #include "Rev2mDistanceSensor.h"
 
 void Robot::RobotInit() {
-  // initialize distance sensor on OnBoard port
-  distSensor = new rev::Rev2mDistanceSensor{rev::Rev2mDistanceSensor::Port::kOnboard};
+  // initialize distance sensor on OnBoard port, set units to inches
+  distSensor = new rev::Rev2mDistanceSensor{rev::Rev2mDistanceSensor::Port::kOnboard, rev::Rev2mDistanceSensor::DistanceUnit::kInches};
 }
 
 void Robot::RobotPeriodic() {}
@@ -44,7 +44,11 @@ void Robot::TeleopPeriodic() {
    * The current measurement is considered valid if IsRangeValid()
    * returns true.
    */
-  if(distSensor->IsRangeValid()) {
+  bool isValid = distSensor->IsRangeValid();
+
+  frc::SmartDashboard::PutBoolean("Data Valid", isValid);
+
+  if(isValid) {
     /**
      * The current measured range is returned from GetRange(). By default
      * this range is returned in inches.
