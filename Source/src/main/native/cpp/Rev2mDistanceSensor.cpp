@@ -15,10 +15,11 @@
 #include <frc/smartdashboard/SendableBuilder.h>
 #include <frc/Utility.h>
 
-#define USE_I2C_2V8
 //#define _DEBUG_
 
 using namespace rev;
+
+constexpr int Rev2mDistanceSensorAddress = 0x53;
 
 std::atomic<bool> Rev2mDistanceSensor::m_automaticEnabled{false};
 std::atomic<double> Rev2mDistanceSensor::m_measurementPeriod{0.05};
@@ -31,19 +32,25 @@ void print_pal_error(VL53L0X_Error Status){
     printf("API Status: %i : %s\n", Status, buf);
 }
 
-Rev2mDistanceSensor::Rev2mDistanceSensor(Port port, int deviceAddress, DistanceUnit units)
-    : m_port(static_cast<HAL_I2CPort>(port)), m_deviceAddress(deviceAddress) {
+void print_pal_state(VL53L0X_State PalState) {
+    char buf[VL53L0X_MAX_STRING_LENGTH];
+    VL53L0X_GetPalStateString(PalState, buf);
+    printf("Pal Status: %s\n", buf);
+}
 
-    pDevice->I2cDevAddr = deviceAddress;
+Rev2mDistanceSensor::Rev2mDistanceSensor(Port port, DistanceUnit units, RangeProfile profile)
+    : m_port(static_cast<HAL_I2CPort>(port)) {
+
+    pDevice->I2cDevAddr = Rev2mDistanceSensorAddress;
     pDevice->port = m_port;
     m_units = units;
 
     int32_t status = 0;
     HAL_InitializeI2C(m_port, &status);
 
-    HAL_Report(HALUsageReporting::kResourceType_I2C, deviceAddress);
+    HAL_Report(HALUsageReporting::kResourceType_I2C, Rev2mDistanceSensorAddress);
 
-    if(!Initialize())
+    if(!Initialize(profile))
         frc::DriverStation::ReportWarning("Error initializing Rev 2M device.");
 }
 
@@ -92,62 +99,29 @@ double Rev2mDistanceSensor::GetRangeInches() {
 
 void Rev2mDistanceSensor::SetEnabled(bool enable) { m_enabled = enable; }
 
-void Rev2mDistanceSensor::SetRangeProfile(RangeProfile profile) {
-    uint32_t budget;
-
-    if (profile == RangeProfile::kHighAccuracy) {
-        m_profile = RangeProfile::kHighAccuracy;
-        budget = 200000;
-    }
-    else if (profile == RangeProfile::kLongRange) {
-        m_profile = RangeProfile::kLongRange;
-        budget = 33000;
-    }
-    else if (profile == RangeProfile::kHighSpeed) {
-        m_profile = RangeProfile::kLongRange;
-        budget = 20000;
-    }
-    else {
-        m_profile = RangeProfile::kLongRange;
-        budget = 20000;
-    }
+bool Rev2mDistanceSensor::SetRangeProfile(RangeProfile profile) {
+    m_newProfile = profile;
 
     if(m_stopped) {
         #ifdef _DEBUG_
-        printf("Sensor stopped. Setting timing budget\n");
+        printf("Sensor stopped. Changing profile\n");
         #endif
-        SetMeasurementTimingBudget(budget);
+        if (profile == RangeProfile::kHighAccuracy) 
+            return SetProfileHighAccuracy();
+        else if (profile == RangeProfile::kLongRange)
+            return SetProfileLongRange();
+        else if (profile == RangeProfile::kHighSpeed)
+            return SetProfileHighSpeed();
+        else
+            return SetProfileDefault();
     }
     else {
         #ifdef _DEBUG_
-        printf("Sensor disabled. Setting budget to %d\n", budget);
+        printf("Sensor not stopped. Disabling\n");
         #endif
         m_enabled = false;
-        m_newMeasurementTimingBudget = budget;
+        return false;
     }
-}
-
-void Rev2mDistanceSensor::SetMeasurementTimingBudget(uint32_t budget_us) {
-    Status = VL53L0X_SetMeasurementTimingBudgetMicroSeconds(pDevice, budget_us);
-
-    if(Status == VL53L0X_ERROR_NONE) {
-        m_currentMeasurementTimingBudget = budget_us;
-        m_newMeasurementTimingBudget = budget_us;
-        #ifdef _DEBUG_
-        printf("Timing budget changed to %dus\n", m_currentMeasurementTimingBudget);
-        #endif
-    }
-    else {
-        #ifdef _DEBUG_
-        printf("Error setting timing buget\n");
-        #endif
-    }
-}
-
-bool Rev2mDistanceSensor::GetMeasurementTimingBudget(uint32_t *budget_us) {
-    Status = VL53L0X_GetMeasurementTimingBudgetMicroSeconds(pDevice, budget_us);
-
-    return Status == 0;
 }
 
 void Rev2mDistanceSensor::SetMeasurementPeriod(double period) {
@@ -171,7 +145,10 @@ Rev2mDistanceSensor::DistanceUnit Rev2mDistanceSensor::GetDistanceUnits() const 
   return m_units;
 }
 
-bool Rev2mDistanceSensor::Initialize(void) {
+bool Rev2mDistanceSensor::Initialize(RangeProfile profile) {
+    Status = VL53L0X_ERROR_NONE;
+    VL53L0X_Version_t *pVersion = new VL53L0X_Version_t;
+    VL53L0X_DeviceInfo_t *pDeviceInfo = new VL53L0X_DeviceInfo_t;
     uint32_t refSpadCount;
     uint8_t isApertureSpads;
     uint8_t VhvSettings;
@@ -188,7 +165,6 @@ bool Rev2mDistanceSensor::Initialize(void) {
     if(ValidateI2C() != true)
         frc::DriverStation::ReportError("Error communicating with Rev 2M sensor over I2C.");
 
-    VL53L0X_Version_t *pVersion = new VL53L0X_Version_t;
     Status = VL53L0X_GetVersion(pVersion);
     #ifdef  _DEBUG_
     if(Status != VL53L0X_ERROR_NONE) {
@@ -197,56 +173,71 @@ bool Rev2mDistanceSensor::Initialize(void) {
     }
     #endif
 
-    Status = VL53L0X_DataInit(pDevice); // Data initialization
+    if(Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_DataInit(pDevice); // Data initialization
+    }
     #ifdef _DEBUG_
-    if(Status != VL53L0X_ERROR_NONE) {
-        frc::DriverStation::ReportError("Data init error.");
+    else {
         print_pal_error(Status);
     }
     #endif
 
-    VL53L0X_DeviceInfo_t *pDeviceInfo = new VL53L0X_DeviceInfo_t;
-    Status = VL53L0X_GetDeviceInfo(pDevice, pDeviceInfo);
+    if(Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_GetDeviceInfo(pDevice, pDeviceInfo);
+    }
     #ifdef _DEBUG_
-    if(Status != VL53L0X_ERROR_NONE) {
-        frc::DriverStation::ReportError("Get device info error.");
+    else {
         print_pal_error(Status);
     }
     #endif
     
-    Status = VL53L0X_StaticInit(pDevice); // Device Initialization
+    if(Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_StaticInit(pDevice); // Device Initialization
+    }
     #ifdef _DEBUG_
-    if(Status != VL53L0X_ERROR_NONE) {
-        frc::DriverStation::ReportError("Static init error.");
+    else {
         print_pal_error(Status);
     }
     #endif
     
-    Status = VL53L0X_PerformRefCalibration(pDevice, &VhvSettings, &PhaseCal); // Device Initialization
+    if(Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_PerformRefCalibration(pDevice, &VhvSettings, &PhaseCal); // Device Initialization
+    }
     #ifdef _DEBUG_
-    if(Status != VL53L0X_ERROR_NONE) {
-        frc::DriverStation::ReportError("Static init error.");
+    else {
         print_pal_error(Status);
     }
     #endif
 
-    Status = VL53L0X_PerformRefSpadManagement(pDevice, &refSpadCount, &isApertureSpads); // Device Initialization
+    if(Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_PerformRefSpadManagement(pDevice, &refSpadCount, &isApertureSpads); // Device Initialization
+    }
     #ifdef _DEBUG_
-    if(Status != VL53L0X_ERROR_NONE) {
-        frc::DriverStation::ReportError("Erroring performing ref spad management.");
+    else {
         print_pal_error(Status);
     }
     #endif
 
-    Status = VL53L0X_SetDeviceMode(pDevice, VL53L0X_DEVICEMODE_CONTINUOUS_RANGING);
+    if(Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetDeviceMode(pDevice, VL53L0X_DEVICEMODE_CONTINUOUS_RANGING);
+    }
     #ifdef _DEBUG_
-    if(Status != VL53L0X_ERROR_NONE) {
-        frc::DriverStation::ReportWarning("Error starting Rev 2M sensor\n");
+    else {
+        print_pal_error(Status);
     }
     #endif
 
-    m_sensors.emplace_back(this);
-    m_enabled = true;
+    if(Status == VL53L0X_ERROR_NONE) {
+        if(SetRangeProfile(profile)) {
+            m_sensors.emplace_back(this);
+            m_enabled = true;
+        }
+        #ifdef _DEBUG_
+        else {
+            frc::DriverStation::ReportWarning("Error setting range profile\n");
+        }
+        #endif
+    }
 
     // return true if initialization was successful
     return Status >= 0;
@@ -295,11 +286,12 @@ void Rev2mDistanceSensor::SetAutomaticMode(bool enabling)
     // if automatic is being enabled
     if(enabling) {
         // if thread is not currently running, start it
-        if(!m_thread.joinable())
+        if(!m_thread.joinable()) {
             #ifdef _DEBUG_
             printf("Starting thread\n");
             #endif
             m_thread = std::thread(&Rev2mDistanceSensor::DoContinuous);
+        }
     } 
     // else automatic mode is being disabled
     else {
@@ -335,8 +327,12 @@ void Rev2mDistanceSensor::DoContinuous(void) {
                     // command device to start measurement
                     stat = VL53L0X_StartMeasurement(sensor->pDevice);
 
-                    if(stat == VL53L0X_ERROR_NONE)
+                    if(stat == VL53L0X_ERROR_NONE) {
                         sensor->m_stopped = false;
+                        #ifdef _DEBUG_
+                        printf("Sensor started\n");
+                        #endif
+                    }
                 }
                 // else sensor has been started
                 else {
@@ -366,13 +362,21 @@ void Rev2mDistanceSensor::DoContinuous(void) {
             } 
             // else automatic is not enabled
             else if(!sensor->m_stopped) {
+                #ifdef _DEBUG_
+                printf("Sensor not stopped\n");
+                #endif
+
                 // if sensor is not currently stopping
                 if(!sensor->m_stopping) {
                     // command device to stop measurements
                     stat = VL53L0X_StopMeasurement(sensor->pDevice);
 
-                    if(stat == VL53L0X_ERROR_NONE)
+                    if(stat == VL53L0X_ERROR_NONE) {
                         sensor->m_stopping = true;
+                        #ifdef _DEBUG_
+                        printf("Sensor Stopping\n");
+                        #endif
+                    }
                 }
                 // else sensor is currently stopping
                 else {
@@ -385,27 +389,41 @@ void Rev2mDistanceSensor::DoContinuous(void) {
                         sensor->m_stopping = false;
                         stat = VL53L0X_ClearInterruptMask(sensor->pDevice, 
                                     VL53L0X_REG_SYSTEM_INTERRUPT_GPIO_NEW_SAMPLE_READY);
+
+                        #ifdef _DEBUG_
+                        printf("Sensor Stopped\n");
+                        #endif
                     }
                 }
             }
             // else if sensor is stopped and measurement timing budget needs to be changed
-            else if(sensor->m_newMeasurementTimingBudget != sensor->m_currentMeasurementTimingBudget) {
-                sensor->SetMeasurementTimingBudget(sensor->m_newMeasurementTimingBudget);
-
-                if(sensor->m_newMeasurementTimingBudget == sensor->m_currentMeasurementTimingBudget) {
-                    // if timing budget is successfully set, reenable sensor
+            if(sensor->m_newProfile != sensor->m_profile) {
+                allStopped = false;
+                #ifdef _DEBUG_
+                printf("Changing Profile\n");
+                #endif
+                if(sensor->SetRangeProfile(sensor->m_newProfile)) {
                     sensor->m_enabled = true;
+                    #ifdef _DEBUG_
+                    printf("Profile Changed\n");
+                    #endif
                 }
             }
 
             // check if there are any sensors still enabled
-            if(!sensor->m_stopped)
+            if(!sensor->m_stopped) {
                 allStopped = false;
+            } 
+            #ifdef _DEBUG_
+            else {
+                printf("All sensors stopped\n");
+            }
+            #endif
         }
 
         frc::Wait(m_measurementPeriod);
     }
-    while(!allStopped && m_automaticEnabled);
+    while(!allStopped || m_automaticEnabled);
 
     #ifdef _DEBUG_
     printf("Stopping thread\n");
@@ -435,4 +453,208 @@ void Rev2mDistanceSensor::SetPIDSourceType(frc::PIDSourceType pidSource) {
     if (wpi_assert(pidSource == frc::PIDSourceType::kDisplacement)) {
         m_pidSource = pidSource;
     }
+}
+
+bool Rev2mDistanceSensor::SetProfileLongRange(void) {
+    #ifdef _DEBUG_
+    printf("Setting profile to long range\n");
+    #endif
+    Status = VL53L0X_SetLimitCheckEnable(pDevice,
+            VL53L0X_CHECKENABLE_SIGMA_FINAL_RANGE, 1);
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetLimitCheckEnable(pDevice,
+        		VL53L0X_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE, 1);
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetLimitCheckEnable(pDevice,
+        		VL53L0X_CHECKENABLE_RANGE_IGNORE_THRESHOLD, 0);
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetLimitCheckValue(pDevice,
+        		VL53L0X_CHECKENABLE_SIGMA_FINAL_RANGE,
+        		(FixPoint1616_t)(60*65536));
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetLimitCheckValue(pDevice,
+        		VL53L0X_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE,
+        		(FixPoint1616_t)(0.1*65536));
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetMeasurementTimingBudgetMicroSeconds(pDevice,
+        		33000);
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetVcselPulsePeriod(pDevice, 
+		        VL53L0X_VCSEL_PERIOD_PRE_RANGE, 18);
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetVcselPulsePeriod(pDevice, 
+		        VL53L0X_VCSEL_PERIOD_FINAL_RANGE, 14);
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        m_profile = RangeProfile::kLongRange;
+    }
+
+    return Status == VL53L0X_ERROR_NONE;
+}
+
+bool Rev2mDistanceSensor::SetProfileHighAccuracy(void) {
+    #ifdef _DEBUG_
+    printf("Setting profile to high accuracy\n");
+    #endif
+    Status = VL53L0X_SetLimitCheckEnable(pDevice,
+            VL53L0X_CHECKENABLE_SIGMA_FINAL_RANGE, 1);
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetLimitCheckEnable(pDevice,
+        		VL53L0X_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE, 1);
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetLimitCheckEnable(pDevice,
+        		VL53L0X_CHECKENABLE_RANGE_IGNORE_THRESHOLD, 0);
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetLimitCheckValue(pDevice,
+        		VL53L0X_CHECKENABLE_SIGMA_FINAL_RANGE,
+        		(FixPoint1616_t)(18*65536));
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetLimitCheckValue(pDevice,
+        		VL53L0X_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE,
+        		(FixPoint1616_t)(0.25*65536));
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetMeasurementTimingBudgetMicroSeconds(pDevice,
+        		200000);
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetVcselPulsePeriod(pDevice, 
+		        VL53L0X_VCSEL_PERIOD_PRE_RANGE, 14);
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetVcselPulsePeriod(pDevice, 
+		        VL53L0X_VCSEL_PERIOD_FINAL_RANGE, 10);
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        m_profile = RangeProfile::kHighAccuracy;
+    }
+
+    return Status == VL53L0X_ERROR_NONE;
+}
+
+bool Rev2mDistanceSensor::SetProfileHighSpeed(void) {
+    #ifdef _DEBUG_
+    printf("Setting profile to high speed\n");
+    #endif
+    Status = VL53L0X_SetLimitCheckEnable(pDevice,
+            VL53L0X_CHECKENABLE_SIGMA_FINAL_RANGE, 1);
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetLimitCheckEnable(pDevice,
+        		VL53L0X_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE, 1);
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetLimitCheckEnable(pDevice,
+        		VL53L0X_CHECKENABLE_RANGE_IGNORE_THRESHOLD, 0);
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetLimitCheckValue(pDevice,
+        		VL53L0X_CHECKENABLE_SIGMA_FINAL_RANGE,
+        		(FixPoint1616_t)(32*65536));
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetLimitCheckValue(pDevice,
+        		VL53L0X_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE,
+        		(FixPoint1616_t)(0.25*65536));
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetMeasurementTimingBudgetMicroSeconds(pDevice,
+        		30000);
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetVcselPulsePeriod(pDevice, 
+		        VL53L0X_VCSEL_PERIOD_PRE_RANGE, 14);
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetVcselPulsePeriod(pDevice, 
+		        VL53L0X_VCSEL_PERIOD_FINAL_RANGE, 10);
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        m_profile = RangeProfile::kHighSpeed;
+    }
+
+    return Status == VL53L0X_ERROR_NONE;
+}
+
+bool Rev2mDistanceSensor::SetProfileDefault(void) {
+    #ifdef _DEBUG_
+    printf("Setting profile to default\n");
+    #endif
+    Status = VL53L0X_SetLimitCheckEnable(pDevice,
+            VL53L0X_CHECKENABLE_SIGMA_FINAL_RANGE, 1);
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetLimitCheckEnable(pDevice,
+        		VL53L0X_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE, 1);
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetLimitCheckEnable(pDevice,
+        		VL53L0X_CHECKENABLE_RANGE_IGNORE_THRESHOLD, 0);
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetLimitCheckValue(pDevice,
+        		VL53L0X_CHECKENABLE_SIGMA_FINAL_RANGE,
+        		(FixPoint1616_t)(18*65536));
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetLimitCheckValue(pDevice,
+        		VL53L0X_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE,
+        		(FixPoint1616_t)(0.25*65536));
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetMeasurementTimingBudgetMicroSeconds(pDevice,
+        		33823);
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetVcselPulsePeriod(pDevice, 
+		        VL53L0X_VCSEL_PERIOD_PRE_RANGE, 14);
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        Status = VL53L0X_SetVcselPulsePeriod(pDevice, 
+		        VL53L0X_VCSEL_PERIOD_FINAL_RANGE, 10);
+    }
+
+    if (Status == VL53L0X_ERROR_NONE) {
+        m_profile = RangeProfile::kDefault;
+    }
+
+    return Status == VL53L0X_ERROR_NONE;
 }

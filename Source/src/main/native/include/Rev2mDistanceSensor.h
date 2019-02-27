@@ -41,10 +41,15 @@ class Rev2mDistanceSensor : public frc::ErrorBase, public frc::SendableBase, pub
          * Creat an instance of the Distance Sensor.
          *
          * @param port          The I2C port to which the device is connected.
-         * @param deviceAddress The address of the device on the I2C bus.
          * @param units         The units returned in either kInches or kMilliMeters
+         * @param profile       Range profile for the device. Valid options are:
+         *                          kDefault
+         *                          kHighAccuracy
+         *                          kLongRange
+         *                          kHighSpeed
+         *                      Refer to data sheet for profile specific performance specs.
          */
-        Rev2mDistanceSensor(Port port, int deviceAddress = 0x53, DistanceUnit units = kInches);
+        Rev2mDistanceSensor(Port port, DistanceUnit units, RangeProfile profile = RangeProfile::kDefault);
 
         ~Rev2mDistanceSensor() override;
 
@@ -126,7 +131,7 @@ class Rev2mDistanceSensor : public frc::ErrorBase, public frc::SendableBase, pub
          * 
          * @param RangeProfile The range profile to set in the sensor
          */
-        void SetRangeProfile(RangeProfile);
+        bool SetRangeProfile(RangeProfile);
 
         /**
          * Set the measurement period for the round robin scheduling loop.
@@ -172,33 +177,38 @@ class Rev2mDistanceSensor : public frc::ErrorBase, public frc::SendableBase, pub
         void InitSendable(frc::SendableBuilder& builder) override;
 
     private:
-        bool Initialize(void);
+        bool Initialize(RangeProfile);
         static void DoContinuous(void);
         bool ValidateI2C(void);
         double GetRangeMM(void);
         double GetRangeInches(void);
-        void SetMeasurementTimingBudget(uint32_t budget_us);
-        bool GetMeasurementTimingBudget(uint32_t*);
-        HAL_I2CPort m_port = HAL_I2C_kInvalid;
-        int m_deviceAddress;
+        bool SetProfileLongRange(void);
+        bool SetProfileHighAccuracy(void);
+        bool SetProfileHighSpeed(void);
+        bool SetProfileDefault(void);
+
+        // measurement parameters
+        double m_currentRange = -1;
+        double m_timestamp = -1;
+        bool m_rangeValid = false;
+
+        // VL53L0X API specific parameters
         VL53L0X_Error Status = VL53L0X_ERROR_NONE;
         VL53L0X_Dev_t *pDevice = new VL53L0X_Dev_t;
-        bool m_rangeValid = false;
-        double m_currentRange = -1;
+
+
+        HAL_I2CPort m_port = HAL_I2C_kInvalid;
         bool m_enabled = false;
         bool m_stopped = true;
         bool m_stopping = false;
         DistanceUnit m_units;
-        RangeProfile m_profile;
-        uint32_t m_currentMeasurementTimingBudget = 30000;
-        uint32_t m_newMeasurementTimingBudget = 30000;
-        double m_timestamp;
+        RangeProfile m_profile = RangeProfile::kDefault;
+        RangeProfile m_newProfile = RangeProfile::kDefault;
 
         static std::atomic<double> m_measurementPeriod;
         static std::thread m_thread;
         static std::vector<Rev2mDistanceSensor*> m_sensors;
         static std::atomic<bool> m_automaticEnabled;
-        static std::atomic<bool> dontKillme;
 };
 
 }  // namespace rev
