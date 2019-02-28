@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vl53l0x_def.h"
 #include "vl53l0x_platform_log.h"
 
-#include <frc/I2C.h>
+#include <HAL/I2C.h>
 
 #ifdef __cplusplus
 extern "C" {
