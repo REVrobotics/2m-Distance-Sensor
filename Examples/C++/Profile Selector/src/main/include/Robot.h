@@ -12,7 +12,7 @@
 #include <frc/IterativeRobot.h>
 #include <frc/smartdashboard/SendableChooser.h>
 
-#include "Rev2mDistanceSensor.h"
+#include "rev/Rev2mDistanceSensor.h"
 
 class Robot : public frc::IterativeRobot {
  public:

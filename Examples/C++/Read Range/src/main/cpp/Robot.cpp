@@ -11,11 +11,12 @@
 
 #include <frc/smartdashboard/SmartDashboard.h>
 
-#include "Rev2mDistanceSensor.h"
+#include "rev/Rev2mDistanceSensor.h"
 
 void Robot::RobotInit() {
   // initialize distance sensor on OnBoard port, set units to inches
-  distSensor = new rev::Rev2mDistanceSensor{rev::Rev2mDistanceSensor::Port::kOnboard, rev::Rev2mDistanceSensor::DistanceUnit::kInches};
+  distSensor = new rev::Rev2mDistanceSensor{rev::Rev2mDistanceSensor::Port::kOnboard, 
+                                            rev::Rev2mDistanceSensor::DistanceUnit::kInches};
 }
 
 void Robot::RobotPeriodic() {}
