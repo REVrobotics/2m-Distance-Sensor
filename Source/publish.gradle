@@ -10,7 +10,7 @@ if (!hasProperty('releaseType')) {
 
 ext.licenseFile = files("$rootDir/LICENSE.txt")
 
-def pubVersion = '0.0.3'
+def pubVersion = '0.0.4'
 
 def outputsFolder = file("$buildDir/allOutputs")
 
@@ -50,6 +50,7 @@ ext.addTaskToCopyAllOutputs = { task ->
 
 def artifactGroupId = 'com.revrobotics.frc'
 def baseArtifactId = 'DistanceSensor'
+def driverZipBaseName = "_GROUP_com_revrobotics_frc_ID_${baseArtifactId}-driver_CLS"
 def zipBaseName = "_GROUP_com_revrobotics_frc_ID_${baseArtifactId}-cpp_CLS"
 def javaBaseName = "_GROUP_com_revrobotics_frc_ID_${baseArtifactId}-java_CLS"
 
@@ -81,10 +82,26 @@ task cppSourceZip(type: Zip) {
     }
 }
 
+task cppDriverHeadersZip(type: Zip) {
+    destinationDir = outputsFolder
+    baseName = driverZipBaseName
+    classifier = "headers"
+
+    from(licenseFile) {
+        into '/'
+    }
+
+    from('src/main/driver/include') {
+        into '/'
+    }
+}
+
 build.dependsOn cppHeadersZip
 addTaskToCopyAllOutputs(cppHeadersZip)
 build.dependsOn cppSourceZip
 addTaskToCopyAllOutputs(cppSourceZip)
+build.dependsOn cppDriverHeadersZip
+addTaskToCopyAllOutputs(cppDriverHeadersZip)
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
@@ -159,6 +176,12 @@ model {
             revAllTaskList = createAllCombined(revTaskList, ['DistanceSensor'], zipBaseName, Zip, project)
         }
 
+        def revDriverTaskList = createComponentZipTasks($.components, ['DistanceSensorDriver'], driverZipBaseName, Zip, project, includeStandardZipFormat)
+        def revDriverAllTaskList
+        if (!project.hasProperty('jenkinsBuild')) {
+            revDriverAllTaskList = createAllCombined(revDriverTaskList, ['DistanceSensorDriver'], driverZipBaseName, Zip, project)
+        }
+
         publications {
             cpp(MavenPublication) {
                 revTaskList.each {
@@ -171,6 +194,29 @@ model {
                 artifact cppSourceZip
 
                 artifactId = "${baseArtifactId}-cpp"
+                groupId artifactGroupId
+                version pubVersion
+            }
+            driver(MavenPublication) {
+                revDriverTaskList.each {
+                    artifact it
+                }
+                if (!project.hasProperty('jenkinsBuild')) {
+                    artifact revDriverAllTaskList
+                }
+                artifact cppHeadersZip
+
+                artifactId = "${baseArtifactId}-driver"
+                groupId artifactGroupId
+                version pubVersion
+            }
+
+            java(MavenPublication) {
+                artifact jar
+                artifact sourcesJar
+                artifact javadocJar
+
+                artifactId = "${baseArtifactId}-java"
                 groupId artifactGroupId
                 version pubVersion
             }

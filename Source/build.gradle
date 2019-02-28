@@ -9,8 +9,8 @@ plugins {
 
 apply from: 'config.gradle'
 
-ext.sharedNiConfigs = [DistanceSensor: ['linux:athena']]
-ext.sharedBaseConfigs = [DistanceSensor: []]
+ext.sharedNiConfigs = [DistanceSensor: ['linux:athena'], DistanceSensorDriver: ['linux:athena']]
+ext.sharedBaseConfigs = [DistanceSensor: [], DistanceSensorDriver: []]
 ext.sharedConfigs = [DistanceSensor: []]
 
 apply from: 'dependencies.gradle'
@@ -18,6 +18,16 @@ apply from: 'dependencies.gradle'
 model {
   exportsConfigs {
       DistanceSensor(ExportsConfig) {
+          x86ExcludeSymbols = ['_CT??_R0?AV_System_error', '_CT??_R0?AVexception', '_CT??_R0?AVfailure',
+                                '_CT??_R0?AVbad_cast',
+                                '_CT??_R0?AVruntime_error', '_CT??_R0?AVsystem_error', '_CTA5?AVfailure',
+                                '_TI5?AVfailure']
+          x64ExcludeSymbols = ['_CT??_R0?AV_System_error', '_CT??_R0?AVexception', '_CT??_R0?AVfailure',
+                                '_CT??_R0?AVbad_cast',
+                                '_CT??_R0?AVruntime_error', '_CT??_R0?AVsystem_error', '_CTA5?AVfailure',
+                                '_TI5?AVfailure']
+      }
+      DistanceSensorDriver(ExportsConfig) {
           x86ExcludeSymbols = ['_CT??_R0?AV_System_error', '_CT??_R0?AVexception', '_CT??_R0?AVfailure',
                                 '_CT??_R0?AVbad_cast',
                                 '_CT??_R0?AVruntime_error', '_CT??_R0?AVsystem_error', '_CTA5?AVfailure',
@@ -38,6 +48,25 @@ model {
           }
           exportedHeaders {
             srcDirs 'src/main/native/include'
+          }
+        }
+      }
+      binaries.all {
+        lib library: "DistanceSensorDriver", linkage: 'shared'
+      }
+    }
+    DistanceSensorDriver(JniNativeLibrarySpec) {
+      enableCheckTask true
+      javaCompileTasks << compileJava
+      jniCrossCompileOptions << JniCrossCompileOptions('athena')
+      sources {
+        cpp {
+          source {
+            srcDirs 'src/main/driver/cpp'
+            include '**/*.cpp', '**/*.c'
+          }
+          exportedHeaders {
+            srcDirs 'src/main/driver/include'
           }
         }
       }
