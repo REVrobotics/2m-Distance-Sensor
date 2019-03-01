@@ -207,6 +207,12 @@ class Rev2mDistanceSensor : public frc::ErrorBase, public frc::SendableBase, pub
         bool SetProfileHighAccuracy(void);
         bool SetProfileHighSpeed(void);
         bool SetProfileDefault(void);
+        void StartMeasurement(void);
+        bool GetMeasurementDataReady(void);
+        void GetMeasurementData(void);
+        void StopMeasurement(void);
+        void GetStopCompletedStatus(void);
+        void SetProfile(RangeProfile);
 
         // measurement parameters
         double m_currentRange = -1;
@@ -216,7 +222,7 @@ class Rev2mDistanceSensor : public frc::ErrorBase, public frc::SendableBase, pub
         // VL53L0X API specific parameters
         VL53L0X_Error Status = VL53L0X_ERROR_NONE;
         VL53L0X_Dev_t *pDevice = new VL53L0X_Dev_t;
-
+        VL53L0X_RangingMeasurementData_t *pRangingMeasurementData = new VL53L0X_RangingMeasurementData_t;
 
         HAL_I2CPort m_port = HAL_I2C_kInvalid;
         bool m_enabled = false;

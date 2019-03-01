@@ -48,9 +48,10 @@
 using namespace rev;
 
 constexpr int Rev2mDistanceSensorAddress = 0x53;
+constexpr double defaultMeasurementPeriod = 0.05;
 
 std::atomic<bool> Rev2mDistanceSensor::m_automaticEnabled{false};
-std::atomic<double> Rev2mDistanceSensor::m_measurementPeriod{0.05};
+std::atomic<double> Rev2mDistanceSensor::m_measurementPeriod{defaultMeasurementPeriod};
 std::vector<Rev2mDistanceSensor*> Rev2mDistanceSensor::m_sensors;
 std::thread Rev2mDistanceSensor::m_thread;
 
@@ -128,9 +129,11 @@ double Rev2mDistanceSensor::GetRangeInches() {
 void Rev2mDistanceSensor::SetEnabled(bool enable) { m_enabled = enable; }
 
 bool Rev2mDistanceSensor::SetRangeProfile(RangeProfile profile) {
+    if(profile == m_profile) return true; // ignore the case of no change
+
     m_newProfile = profile;
 
-    if(m_stopped) {
+    if(m_stopped && !m_automaticEnabled) {
         #ifdef _DEBUG_
         printf("Sensor stopped. Changing profile\n");
         #endif
@@ -332,9 +335,6 @@ void Rev2mDistanceSensor::SetAutomaticMode(bool enabling)
 }
 
 void Rev2mDistanceSensor::DoContinuous(void) {
-    VL53L0X_Error stat = VL53L0X_ERROR_NONE;
-    VL53L0X_RangingMeasurementData_t *pRangingMeasurementData = new VL53L0X_RangingMeasurementData_t;
-    uint8_t NewDatReady = 0;
     bool allStopped;
 
     #ifdef _DEBUG_
@@ -352,90 +352,30 @@ void Rev2mDistanceSensor::DoContinuous(void) {
             if(sensor->IsEnabled()) {
                 // if sensor has not been started yet
                 if(sensor->m_stopped) {
-                    // command device to start measurement
-                    stat = VL53L0X_StartMeasurement(sensor->pDevice);
-
-                    if(stat == VL53L0X_ERROR_NONE) {
-                        sensor->m_stopped = false;
-                        #ifdef _DEBUG_
-                        printf("Sensor started\n");
-                        #endif
-                    }
+                    sensor->StartMeasurement();
                 }
                 // else sensor has been started
                 else {
-                    // check for new data
-                    stat = VL53L0X_GetMeasurementDataReady(sensor->pDevice, 
-                                                            &NewDatReady);
-
-                    // if new data is ready
-                    if((NewDatReady == 0x01) && (stat == VL53L0X_ERROR_NONE)) {
-                        stat = VL53L0X_GetRangingMeasurementData(sensor->pDevice, 
-                                    pRangingMeasurementData);
-                        VL53L0X_ClearInterruptMask(sensor->pDevice, 
-                                    VL53L0X_REG_SYSTEM_INTERRUPT_GPIO_NEW_SAMPLE_READY);
-
-                        if(stat == VL53L0X_ERROR_NONE) {
-                            // range is valid when RangeStatus equals 0
-                            sensor->m_rangeValid = pRangingMeasurementData->RangeStatus == 0;
-                            sensor->m_currentRange = pRangingMeasurementData->RangeMilliMeter;
-                            sensor->m_timestamp = frc::Timer::GetFPGATimestamp();
-                        } else {
-                            sensor->m_rangeValid = false;
-                        }
-                    } else {
-                        sensor->m_rangeValid = false;
-                    }
+                    sensor->GetMeasurementData();
                 }
             } 
             // else automatic is not enabled
             else if(!sensor->m_stopped) {
-                #ifdef _DEBUG_
-                printf("Sensor not stopped\n");
-                #endif
-
                 // if sensor is not currently stopping
                 if(!sensor->m_stopping) {
                     // command device to stop measurements
-                    stat = VL53L0X_StopMeasurement(sensor->pDevice);
-
-                    if(stat == VL53L0X_ERROR_NONE) {
-                        sensor->m_stopping = true;
-                        #ifdef _DEBUG_
-                        printf("Sensor Stopping\n");
-                        #endif
-                    }
+                    sensor->StopMeasurement();
                 }
                 // else sensor is currently stopping
                 else {
                     // check if sensor has finished
-                    uint32_t StopCompleted = 0;
-                    stat = VL53L0X_GetStopCompletedStatus(sensor->pDevice, &StopCompleted);
-
-                    if ((StopCompleted == 0x00) || stat != VL53L0X_ERROR_NONE) {
-                        sensor->m_stopped = true;
-                        sensor->m_stopping = false;
-                        stat = VL53L0X_ClearInterruptMask(sensor->pDevice, 
-                                    VL53L0X_REG_SYSTEM_INTERRUPT_GPIO_NEW_SAMPLE_READY);
-
-                        #ifdef _DEBUG_
-                        printf("Sensor Stopped\n");
-                        #endif
-                    }
+                    sensor->GetStopCompletedStatus();
                 }
             }
             // else if sensor is stopped and measurement timing budget needs to be changed
-            if(sensor->m_newProfile != sensor->m_profile) {
+            else if(sensor->m_newProfile != sensor->m_profile) {
                 allStopped = false;
-                #ifdef _DEBUG_
-                printf("Changing Profile\n");
-                #endif
-                if(sensor->SetRangeProfile(sensor->m_newProfile)) {
-                    sensor->m_enabled = true;
-                    #ifdef _DEBUG_
-                    printf("Profile Changed\n");
-                    #endif
-                }
+                sensor->SetProfile(sensor->m_newProfile);
             }
 
             // check if there are any sensors still enabled
@@ -459,6 +399,103 @@ void Rev2mDistanceSensor::DoContinuous(void) {
 
     // all sensors stopped and automatic is disabled so detach thread
     m_thread.detach();
+}
+
+void Rev2mDistanceSensor::StartMeasurement(void) {
+    // command device to start measurement
+    VL53L0X_Error stat = VL53L0X_StartMeasurement(pDevice);
+
+    if(stat == VL53L0X_ERROR_NONE) {
+        m_stopped = false;
+        #ifdef _DEBUG_
+        printf("Sensor started\n");
+        #endif
+    }
+}
+
+bool Rev2mDistanceSensor::GetMeasurementDataReady(void) {
+    // check for new data
+    uint8_t NewDatReady = 0;
+    VL53L0X_Error stat = VL53L0X_GetMeasurementDataReady(pDevice, 
+                                                         &NewDatReady);
+
+    // if new data is ready
+    return ((NewDatReady == 0x01) && (stat == VL53L0X_ERROR_NONE));
+}
+
+void Rev2mDistanceSensor::GetMeasurementData(void) {
+    if(GetMeasurementDataReady()) {
+        
+        VL53L0X_Error stat = VL53L0X_GetRangingMeasurementData(pDevice, 
+                                pRangingMeasurementData);
+
+        VL53L0X_ClearInterruptMask(pDevice, 
+                    VL53L0X_REG_SYSTEM_INTERRUPT_GPIO_NEW_SAMPLE_READY);
+
+        if(stat == VL53L0X_ERROR_NONE) {
+            // range is valid when RangeStatus equals 0
+            m_rangeValid = pRangingMeasurementData->RangeStatus == 0;
+            m_currentRange = pRangingMeasurementData->RangeMilliMeter;
+            m_timestamp = frc::Timer::GetFPGATimestamp();
+        } else {
+            m_rangeValid = false;
+        }
+    } 
+    else {
+        m_rangeValid = false;
+    }
+}
+
+void Rev2mDistanceSensor::StopMeasurement(void) {
+    #ifdef _DEBUG_
+    printf("Sensor Stopping\n");
+    #endif
+    VL53L0X_Error stat = VL53L0X_StopMeasurement(pDevice);
+
+    if(stat == VL53L0X_ERROR_NONE) {
+        m_stopping = true;
+    }
+}
+
+void Rev2mDistanceSensor::GetStopCompletedStatus(void) {
+    uint32_t StopCompleted = 0;
+    VL53L0X_Error stat = VL53L0X_GetStopCompletedStatus(pDevice, &StopCompleted);
+
+    if((StopCompleted == 0x00) || stat != VL53L0X_ERROR_NONE) {
+        m_stopped = true;
+        m_stopping = false;
+        VL53L0X_ClearInterruptMask(pDevice, 
+                    VL53L0X_REG_SYSTEM_INTERRUPT_GPIO_NEW_SAMPLE_READY);
+
+        #ifdef _DEBUG_
+        printf("Sensor Stopped\n");
+        #endif
+    }
+    #ifdef _DEBUG_
+    else {
+        printf("Sensor not stopped yet.\n");
+    }
+    #endif
+}
+
+void Rev2mDistanceSensor::SetProfile(RangeProfile profile) {
+    #ifdef _DEBUG_
+    printf("Changing profile in autonomous\n");
+    #endif
+
+    if (m_newProfile == RangeProfile::kHighAccuracy) 
+        m_enabled = SetProfileHighAccuracy();
+    else if (m_newProfile == RangeProfile::kLongRange)
+        m_enabled = SetProfileLongRange();
+    else if (m_newProfile == RangeProfile::kHighSpeed)
+        m_enabled = SetProfileHighSpeed();
+    else
+        m_enabled = SetProfileDefault();
+
+    #ifdef _DEBUG_
+    if(m_enabled)
+        printf("Sensor reenabled\n");
+    #endif
 }
 
 void Rev2mDistanceSensor::InitSendable(frc::SendableBuilder& builder) {
@@ -528,6 +565,9 @@ bool Rev2mDistanceSensor::SetProfileLongRange(void) {
     }
 
     if (Status == VL53L0X_ERROR_NONE) {
+        #ifdef _DEBUG_
+        printf("Profile changed to long range\n");
+        #endif
         m_profile = RangeProfile::kLongRange;
     }
 
@@ -579,6 +619,9 @@ bool Rev2mDistanceSensor::SetProfileHighAccuracy(void) {
     }
 
     if (Status == VL53L0X_ERROR_NONE) {
+        #ifdef _DEBUG_
+        printf("Profile changed to high accuracy\n");
+        #endif
         m_profile = RangeProfile::kHighAccuracy;
     }
 
@@ -630,6 +673,9 @@ bool Rev2mDistanceSensor::SetProfileHighSpeed(void) {
     }
 
     if (Status == VL53L0X_ERROR_NONE) {
+        #ifdef _DEBUG_
+        printf("Profile changed to high range\n");
+        #endif
         m_profile = RangeProfile::kHighSpeed;
     }
 
@@ -681,6 +727,9 @@ bool Rev2mDistanceSensor::SetProfileDefault(void) {
     }
 
     if (Status == VL53L0X_ERROR_NONE) {
+        #ifdef _DEBUG_
+        printf("Profile changed to default\n");
+        #endif
         m_profile = RangeProfile::kDefault;
     }
 
