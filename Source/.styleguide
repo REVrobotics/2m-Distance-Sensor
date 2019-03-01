@@ -7,6 +7,7 @@ cppHeaderFileInclude {
 
 cppSrcFileInclude {
   \.cpp$
+  \.c$
 }
 
 generatedFileExclude {
