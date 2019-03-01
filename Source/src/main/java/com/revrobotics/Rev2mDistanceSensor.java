@@ -234,11 +234,16 @@ public class Rev2mDistanceSensor extends SendableBase implements PIDSource {
      * period
      * 
      * @param profile The range profile to set in the sensor
+     * 
+     * @return Profile successfully changed
      */
     public boolean setRangeProfile(RangeProfile profile) {
+        if(profile == m_profile) return true; // ignore the case of no change
+
         m_newProfile = profile;
 
-        if(m_stopped) {
+        if(m_stopped && !m_automaticEnabled) {
+            //System.out.println("Sensor stopped. Changing profile.");
             if(profile == RangeProfile.kHighAccuracy)
                 return setProfileHighAccuracy();
             else if(profile == RangeProfile.kLongRange)
@@ -249,6 +254,7 @@ public class Rev2mDistanceSensor extends SendableBase implements PIDSource {
                 return setProfileDefault();
         }
         else {
+            //System.out.println("Sensor not stopped");
             m_enabled = false;
             return false;
         }
@@ -382,9 +388,15 @@ public class Rev2mDistanceSensor extends SendableBase implements PIDSource {
                     }
                     else if(sensor.m_newProfile != sensor.m_profile) {
                         allStopped = false;
-                        if(sensor.setRangeProfile(sensor.m_newProfile)) {
-                            sensor.m_enabled = true;
-                        }
+
+                        if(sensor.m_newProfile == RangeProfile.kHighAccuracy)
+                            sensor.m_enabled = sensor.setProfileHighAccuracy();
+                        else if(sensor.m_newProfile == RangeProfile.kLongRange)
+                            sensor.m_enabled = sensor.setProfileLongRange();
+                        else if(sensor.m_newProfile == RangeProfile.kHighSpeed)
+                            sensor.m_enabled = sensor.setProfileHighSpeed();
+                        else
+                            sensor.m_enabled = sensor.setProfileDefault();
                     }
 
                     if(!sensor.m_stopped) {
@@ -445,6 +457,7 @@ public class Rev2mDistanceSensor extends SendableBase implements PIDSource {
     }
 
     private boolean setProfileLongRange() {
+        //System.out.println("Setting profile to long range");
         boolean status = false;
         status = VL53L0XJNI.SetLimitCheckEnableSigmaFinalRange(1, m_port, m_addr);
 
@@ -476,6 +489,7 @@ public class Rev2mDistanceSensor extends SendableBase implements PIDSource {
     }
 
     private boolean setProfileHighAccuracy() {
+        //System.out.println("Setting profile to high accuracy");
         boolean status = false;
         status = VL53L0XJNI.SetLimitCheckEnableSigmaFinalRange(1, m_port, m_addr);
 
@@ -507,6 +521,7 @@ public class Rev2mDistanceSensor extends SendableBase implements PIDSource {
     }
 
     private boolean setProfileHighSpeed() {
+        //System.out.println("Setting profile to high speed");
         boolean status = false;
         status = VL53L0XJNI.SetLimitCheckEnableSigmaFinalRange(1, m_port, m_addr);
 
@@ -538,6 +553,7 @@ public class Rev2mDistanceSensor extends SendableBase implements PIDSource {
     }
 
     private boolean setProfileDefault() {
+        //System.out.println("Setting profile to default");
         boolean status = false;
         status = VL53L0XJNI.SetLimitCheckEnableSigmaFinalRange(1, m_port, m_addr);
 
