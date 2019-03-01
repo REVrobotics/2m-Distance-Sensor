@@ -1,5 +1,9 @@
 # RoboRIO SDK Change Log
 
+## 0.0.5
+- Updated set range profile logic
+- Added new java examples
+
 ## 0.0.4
 - Changed header location
 - Updated license in Rev2mDistanceSensor.cpp and Rev2mDistanceSensor.h
