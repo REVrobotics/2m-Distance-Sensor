@@ -56,7 +56,7 @@ VL53L0X_Dev_t *pDevice = NULL;
 VL53L0X_RangingMeasurementData_t *pRangingMeasurementData = new VL53L0X_RangingMeasurementData_t;
 
 /*
- * Class:     com_revrobotics_VL53L0XJNI
+ * Class:     com_revrobotics_jni_VL53L0XJNI
  * Method:    Init
  * Signature: (II)V
  */
@@ -75,9 +75,9 @@ Java_com_revrobotics_jni_VL53L0XJNI_Init
 }
 
 /*
- * Class:     com_revrobotics_VL53L0XJNI
+ * Class:     com_revrobotics_jni_VL53L0XJNI
  * Method:    GetVersion
- * Signature: ()B
+ * Signature: ()Z
  */
 JNIEXPORT jboolean JNICALL
 Java_com_revrobotics_jni_VL53L0XJNI_GetVersion
@@ -90,9 +90,9 @@ Java_com_revrobotics_jni_VL53L0XJNI_GetVersion
 }
 
 /*
- * Class:     com_revrobotics_VL53L0XJNI
+ * Class:     com_revrobotics_jni_VL53L0XJNI
  * Method:    DataInit
- * Signature: ()B
+ * Signature: (II)Z
  */
 JNIEXPORT jboolean JNICALL
 Java_com_revrobotics_jni_VL53L0XJNI_DataInit
@@ -109,9 +109,9 @@ Java_com_revrobotics_jni_VL53L0XJNI_DataInit
 }
 
 /*
- * Class:     com_revrobotics_VL53L0XJNI
+ * Class:     com_revrobotics_jni_VL53L0XJNI
  * Method:    GetDeviceInfo
- * Signature: ()B
+ * Signature: (II)Z
  */
 JNIEXPORT jboolean JNICALL
 Java_com_revrobotics_jni_VL53L0XJNI_GetDeviceInfo
@@ -129,9 +129,9 @@ Java_com_revrobotics_jni_VL53L0XJNI_GetDeviceInfo
 }
 
 /*
- * Class:     com_revrobotics_VL53L0XJNI
+ * Class:     com_revrobotics_jni_VL53L0XJNI
  * Method:    StaticInit
- * Signature: ()B
+ * Signature: (II)Z
  */
 JNIEXPORT jboolean JNICALL
 Java_com_revrobotics_jni_VL53L0XJNI_StaticInit
@@ -148,9 +148,9 @@ Java_com_revrobotics_jni_VL53L0XJNI_StaticInit
 }
 
 /*
- * Class:     com_revrobotics_VL53L0XJNI
+ * Class:     com_revrobotics_jni_VL53L0XJNI
  * Method:    PerformRefCalibration
- * Signature: ()B
+ * Signature: (II)Z
  */
 JNIEXPORT jboolean JNICALL
 Java_com_revrobotics_jni_VL53L0XJNI_PerformRefCalibration
@@ -168,9 +168,9 @@ Java_com_revrobotics_jni_VL53L0XJNI_PerformRefCalibration
 }
 
 /*
- * Class:     com_revrobotics_VL53L0XJNI
+ * Class:     com_revrobotics_jni_VL53L0XJNI
  * Method:    PerformRefSpadManagement
- * Signature: ()B
+ * Signature: (II)Z
  */
 JNIEXPORT jboolean JNICALL
 Java_com_revrobotics_jni_VL53L0XJNI_PerformRefSpadManagement
@@ -189,9 +189,9 @@ Java_com_revrobotics_jni_VL53L0XJNI_PerformRefSpadManagement
 }
 
 /*
- * Class:     com_revrobotics_VL53L0XJNI
+ * Class:     com_revrobotics_jni_VL53L0XJNI
  * Method:    SetDeviceMode
- * Signature: (I)B
+ * Signature: (III)Z
  */
 JNIEXPORT jboolean JNICALL
 Java_com_revrobotics_jni_VL53L0XJNI_SetDeviceMode
@@ -208,9 +208,9 @@ Java_com_revrobotics_jni_VL53L0XJNI_SetDeviceMode
 }
 
 /*
- * Class:     com_revrobotics_VL53L0XJNI
+ * Class:     com_revrobotics_jni_VL53L0XJNI
  * Method:    ValidateI2C
- * Signature: ()B
+ * Signature: (II)Z
  */
 JNIEXPORT jboolean JNICALL
 Java_com_revrobotics_jni_VL53L0XJNI_ValidateI2C
@@ -254,9 +254,9 @@ Java_com_revrobotics_jni_VL53L0XJNI_ValidateI2C
 }
 
 /*
- * Class:     com_revrobotics_VL53L0XJNI
+ * Class:     com_revrobotics_jni_VL53L0XJNI
  * Method:    SetLimitCheckEnableSigmaFinalRange
- * Signature: (I)B
+ * Signature: (III)Z
  */
 JNIEXPORT jboolean JNICALL
 Java_com_revrobotics_jni_VL53L0XJNI_SetLimitCheckEnableSigmaFinalRange
@@ -274,9 +274,9 @@ Java_com_revrobotics_jni_VL53L0XJNI_SetLimitCheckEnableSigmaFinalRange
 }
 
 /*
- * Class:     com_revrobotics_VL53L0XJNI
+ * Class:     com_revrobotics_jni_VL53L0XJNI
  * Method:    SetLimitCheckEnableSignalRateFinalRange
- * Signature: (I)B
+ * Signature: (III)Z
  */
 JNIEXPORT jboolean JNICALL
 Java_com_revrobotics_jni_VL53L0XJNI_SetLimitCheckEnableSignalRateFinalRange
@@ -294,9 +294,9 @@ Java_com_revrobotics_jni_VL53L0XJNI_SetLimitCheckEnableSignalRateFinalRange
 }
 
 /*
- * Class:     com_revrobotics_VL53L0XJNI
+ * Class:     com_revrobotics_jni_VL53L0XJNI
  * Method:    SetLimitCheckEnableRangeIgnoreThreshold
- * Signature: (I)B
+ * Signature: (III)Z
  */
 JNIEXPORT jboolean JNICALL
 Java_com_revrobotics_jni_VL53L0XJNI_SetLimitCheckEnableRangeIgnoreThreshold
@@ -315,9 +315,9 @@ Java_com_revrobotics_jni_VL53L0XJNI_SetLimitCheckEnableRangeIgnoreThreshold
 }
 
 /*
- * Class:     com_revrobotics_VL53L0XJNI
+ * Class:     com_revrobotics_jni_VL53L0XJNI
  * Method:    SetLimitCheckValueSigmaFinalRange
- * Signature: (I)B
+ * Signature: (III)Z
  */
 JNIEXPORT jboolean JNICALL
 Java_com_revrobotics_jni_VL53L0XJNI_SetLimitCheckValueSigmaFinalRange
@@ -335,9 +335,9 @@ Java_com_revrobotics_jni_VL53L0XJNI_SetLimitCheckValueSigmaFinalRange
 }
 
 /*
- * Class:     com_revrobotics_VL53L0XJNI
+ * Class:     com_revrobotics_jni_VL53L0XJNI
  * Method:    SetLimitCheckValueSignalRateFinalRange
- * Signature: (D)B
+ * Signature: (DII)Z
  */
 JNIEXPORT jboolean JNICALL
 Java_com_revrobotics_jni_VL53L0XJNI_SetLimitCheckValueSignalRateFinalRange
@@ -355,9 +355,9 @@ Java_com_revrobotics_jni_VL53L0XJNI_SetLimitCheckValueSignalRateFinalRange
 }
 
 /*
- * Class:     com_revrobotics_VL53L0XJNI
+ * Class:     com_revrobotics_jni_VL53L0XJNI
  * Method:    SetMeasurementTimingBudgetMicroSeconds
- * Signature: (D)B
+ * Signature: (III)Z
  */
 JNIEXPORT jboolean JNICALL
 Java_com_revrobotics_jni_VL53L0XJNI_SetMeasurementTimingBudgetMicroSeconds
@@ -373,9 +373,9 @@ Java_com_revrobotics_jni_VL53L0XJNI_SetMeasurementTimingBudgetMicroSeconds
 }
 
 /*
- * Class:     com_revrobotics_VL53L0XJNI
+ * Class:     com_revrobotics_jni_VL53L0XJNI
  * Method:    SetVcselPulsePeriodPreRange
- * Signature: (I)B
+ * Signature: (III)Z
  */
 JNIEXPORT jboolean JNICALL
 Java_com_revrobotics_jni_VL53L0XJNI_SetVcselPulsePeriodPreRange
@@ -393,9 +393,9 @@ Java_com_revrobotics_jni_VL53L0XJNI_SetVcselPulsePeriodPreRange
 }
 
 /*
- * Class:     com_revrobotics_VL53L0XJNI
+ * Class:     com_revrobotics_jni_VL53L0XJNI
  * Method:    SetVcselPulsePeriodFinalRange
- * Signature: (I)B
+ * Signature: (III)Z
  */
 JNIEXPORT jboolean JNICALL
 Java_com_revrobotics_jni_VL53L0XJNI_SetVcselPulsePeriodFinalRange
@@ -413,9 +413,9 @@ Java_com_revrobotics_jni_VL53L0XJNI_SetVcselPulsePeriodFinalRange
 }
 
 /*
- * Class:     com_revrobotics_VL53L0XJNI
+ * Class:     com_revrobotics_jni_VL53L0XJNI
  * Method:    StartMeasurement
- * Signature: ()B
+ * Signature: (II)Z
  */
 JNIEXPORT jboolean JNICALL
 Java_com_revrobotics_jni_VL53L0XJNI_StartMeasurement
@@ -432,9 +432,9 @@ Java_com_revrobotics_jni_VL53L0XJNI_StartMeasurement
 }
 
 /*
- * Class:     com_revrobotics_VL53L0XJNI
+ * Class:     com_revrobotics_jni_VL53L0XJNI
  * Method:    GetMeasurementDataReady
- * Signature: ()B
+ * Signature: (II)Z
  */
 JNIEXPORT jboolean JNICALL
 Java_com_revrobotics_jni_VL53L0XJNI_GetMeasurementDataReady
@@ -452,9 +452,9 @@ Java_com_revrobotics_jni_VL53L0XJNI_GetMeasurementDataReady
 }
 
 /*
- * Class:     com_revrobotics_VL53L0XJNI
+ * Class:     com_revrobotics_jni_VL53L0XJNI
  * Method:    ClearInterruptMask
- * Signature: ()B
+ * Signature: (II)Z
  */
 JNIEXPORT jboolean JNICALL
 Java_com_revrobotics_jni_VL53L0XJNI_ClearInterruptMask
@@ -472,9 +472,9 @@ Java_com_revrobotics_jni_VL53L0XJNI_ClearInterruptMask
 }
 
 /*
- * Class:     com_revrobotics_VL53L0XJNI
+ * Class:     com_revrobotics_jni_VL53L0XJNI
  * Method:    StopMeasurement
- * Signature: ()B
+ * Signature: (II)Z
  */
 JNIEXPORT jboolean JNICALL
 Java_com_revrobotics_jni_VL53L0XJNI_StopMeasurement
@@ -491,9 +491,9 @@ Java_com_revrobotics_jni_VL53L0XJNI_StopMeasurement
 }
 
 /*
- * Class:     com_revrobotics_VL53L0XJNI
+ * Class:     com_revrobotics_jni_VL53L0XJNI
  * Method:    GetStopCompletedStatus
- * Signature: ()V
+ * Signature: (II)Z
  */
 JNIEXPORT jboolean JNICALL
 Java_com_revrobotics_jni_VL53L0XJNI_GetStopCompletedStatus
@@ -511,9 +511,9 @@ Java_com_revrobotics_jni_VL53L0XJNI_GetStopCompletedStatus
 }
 
 /*
- * Class:     com_revrobotics_VL53L0XJNI
+ * Class:     com_revrobotics_jni_VL53L0XJNI
  * Method:    GetRangingMeasurementData
- * Signature: ()D
+ * Signature: (II)D
  */
 JNIEXPORT jdouble JNICALL
 Java_com_revrobotics_jni_VL53L0XJNI_GetRangingMeasurementData
@@ -522,8 +522,6 @@ Java_com_revrobotics_jni_VL53L0XJNI_GetRangingMeasurementData
     if(pDevice == NULL)
         return false;
 
-    //VL53L0X_RangingMeasurementData_t *pRangingMeasurementData =  new VL53L0X_RangingMeasurementData_t;
-    //VL53L0X_Error Status = 
     pDevice->port = static_cast<HAL_I2CPort>(port);
     pDevice->I2cDevAddr = static_cast<uint8_t>(addr);
     VL53L0X_GetRangingMeasurementData(pDevice, 
