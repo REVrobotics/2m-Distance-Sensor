@@ -2,7 +2,7 @@
     "fileName": "REV2mDistanceSensor.json",
     "name": "REV2mDistanceSensor",
     "version": "0.0.5",
-    "uuid": "3f48eb8c-50fe-43a6-9cb7-44c86353c4cb",
+    "uuid": "9e352acd-4eec-40f7-8490-3357b5ed65ae",
     "mavenUrls": [
         "http://www.revrobotics.com/content/sw/max/sdk/maven/"
     ],
