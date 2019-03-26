@@ -37,7 +37,7 @@ public class VL53L0XJNI extends RevJNIWrapper {
   public static native boolean PerformRefCalibration(int port, int addr);
   public static native boolean PerformRefSpadManagement(int port, int addr);
   public static native boolean SetDeviceMode(int devMode, int port, int addr);
-  public static native boolean ValidateI2C(int port, int addr);
+  public static native int ValidateI2C(int port, int addr);
   public static native boolean SetLimitCheckEnableSigmaFinalRange(int enable, int port, int addr);
   public static native boolean SetLimitCheckEnableSignalRateFinalRange(int enable, int port, int addr);
   public static native boolean SetLimitCheckEnableRangeIgnoreThreshold(int enable, int port, int addr);

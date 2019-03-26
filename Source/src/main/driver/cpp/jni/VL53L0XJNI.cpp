@@ -36,6 +36,10 @@
 #include "vl53l0x_api.h"
 #include <HAL/I2C.h>
 
+#define VALIDATE_I2C_SUCCESS    (jint)0
+#define VALIDATE_I2C_PARAM_ERR  (jint)1
+#define VALIDATE_I2C_HAL_ERR    (jint)2
+
 extern "C" {
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
     // Check to ensure the JNI version is valid
@@ -210,47 +214,52 @@ Java_com_revrobotics_jni_VL53L0XJNI_SetDeviceMode
 /*
  * Class:     com_revrobotics_jni_VL53L0XJNI
  * Method:    ValidateI2C
- * Signature: (II)Z
+ * Signature: (II)I
  */
-JNIEXPORT jboolean JNICALL
+JNIEXPORT jint JNICALL
 Java_com_revrobotics_jni_VL53L0XJNI_ValidateI2C
   (JNIEnv*, jclass, jint port, jint addr)
 {
     if(pDevice == NULL)
-        return false;
+        return VALIDATE_I2C_HAL_ERR;
 
     pDevice->port = static_cast<HAL_I2CPort>(port);
     pDevice->I2cDevAddr = static_cast<uint8_t>(addr);
 
     uint8_t reg = 0xC0, res[2];
 
-    HAL_TransactionI2C(pDevice->port, pDevice->I2cDevAddr >> 1, &reg, 1, res, 1);
+    if(HAL_TransactionI2C(pDevice->port, pDevice->I2cDevAddr >> 1, &reg, 1, res, 1) < 0)
+        return VALIDATE_I2C_HAL_ERR | (1 << 24);
 
     if(*res != 0xEE)
-        return false;
+        return VALIDATE_I2C_PARAM_ERR | (((uint32_t) reg) << 8) | (((uint32_t) res[0]) << 16);
 
     reg = 0xC1;
-    HAL_TransactionI2C(pDevice->port, pDevice->I2cDevAddr >> 1, &reg, 1, res, 1);
+    if(HAL_TransactionI2C(pDevice->port, pDevice->I2cDevAddr >> 1, &reg, 1, res, 1) < 0)
+        return VALIDATE_I2C_HAL_ERR | (1 << 25);
 
     if(*res != 0xAA)
-        return false;
+        return VALIDATE_I2C_PARAM_ERR | (((uint32_t) reg) << 8) | (((uint32_t) res[0]) << 16);
 
     reg = 0xC2;
-    HAL_TransactionI2C(pDevice->port, pDevice->I2cDevAddr >> 1, &reg, 1, res, 1);
+    if(HAL_TransactionI2C(pDevice->port, pDevice->I2cDevAddr >> 1, &reg, 1, res, 1) < 0)
+        return VALIDATE_I2C_HAL_ERR | (1 << 26);
 
     if(*res != 0x10)
-        return false;
+        return VALIDATE_I2C_PARAM_ERR | (((uint32_t) reg) << 8) | (((uint32_t) res[0]) << 16);
 
     reg = 0x51;
-    HAL_TransactionI2C(pDevice->port, pDevice->I2cDevAddr >> 1, &reg, 1, res, 2);
+    if(HAL_TransactionI2C(pDevice->port, pDevice->I2cDevAddr >> 1, &reg, 1, res, 2) < 0)
+        return VALIDATE_I2C_HAL_ERR | (1 << 27);
 
     reg = 0x61;
-    HAL_TransactionI2C(pDevice->port, pDevice->I2cDevAddr >> 1, &reg, 1, res, 2);
+    if(HAL_TransactionI2C(pDevice->port, pDevice->I2cDevAddr >> 1, &reg, 1, res, 2) < 0)
+        return VALIDATE_I2C_HAL_ERR | (1 << 28);
 
     if((res[0] != 0x00) || (res[1] != 0x00))
-        return false;
+        return VALIDATE_I2C_PARAM_ERR | (((uint32_t) reg) << 8) | (((uint32_t) res[0]) << 16) | (((uint32_t) res[1]) << 24);
 
-    return true;
+    return VALIDATE_I2C_SUCCESS;
 }
 
 /*

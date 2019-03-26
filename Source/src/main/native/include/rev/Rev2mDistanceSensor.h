@@ -200,7 +200,7 @@ class Rev2mDistanceSensor : public frc::ErrorBase, public frc::SendableBase, pub
     private:
         bool Initialize(RangeProfile);
         static void DoContinuous(void);
-        bool ValidateI2C(void);
+        int32_t ValidateI2C(void);
         double GetRangeMM(void);
         double GetRangeInches(void);
         bool SetProfileLongRange(void);

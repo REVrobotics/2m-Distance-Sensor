@@ -42,8 +42,14 @@
 #include <frc/smartdashboard/SendableBase.h>
 #include <frc/smartdashboard/SendableBuilder.h>
 #include <frc/Utility.h>
+#include <wpi/SmallString.h>
+#include <wpi/raw_ostream.h>
+#include <wpi/Format.h>
 
 //#define _DEBUG_
+#define VALIDATE_I2C_SUCCESS    0
+#define VALIDATE_I2C_PARAM_ERR  1
+#define VALIDATE_I2C_HAL_ERR    2
 
 using namespace rev;
 
@@ -79,8 +85,15 @@ Rev2mDistanceSensor::Rev2mDistanceSensor(Port port, DistanceUnit units, RangePro
 
     HAL_Report(HALUsageReporting::kResourceType_I2C, Rev2mDistanceSensorAddress);
 
-    if(!Initialize(profile))
-        frc::DriverStation::ReportWarning("Error initializing Rev 2M device.");
+    if(!Initialize(profile)) {
+        wpi::SmallString<255> buf;
+        wpi::raw_svector_ostream errorString{buf};
+        errorString << "Error initializing Rev 2M device on port " 
+                    << wpi::format("%s", port == Port::kMXP ? "MXP" : "Onboard")
+                    << ". Please check your connections.";
+
+        frc::DriverStation::ReportError(errorString.str());
+    }
 }
 
 Rev2mDistanceSensor::~Rev2mDistanceSensor() { 
@@ -184,6 +197,7 @@ bool Rev2mDistanceSensor::Initialize(RangeProfile profile) {
     uint8_t isApertureSpads;
     uint8_t VhvSettings;
     uint8_t PhaseCal;
+    uint32_t I2C_status;
     
     #ifdef  _DEBUG_
     printf("Initializing device on port: ");
@@ -193,8 +207,14 @@ bool Rev2mDistanceSensor::Initialize(RangeProfile profile) {
         printf("MXP\n");
     #endif
 
-    if(ValidateI2C() != true)
-        frc::DriverStation::ReportError("Error communicating with Rev 2M sensor over I2C.");
+    if((I2C_status = ValidateI2C()) != VALIDATE_I2C_SUCCESS) {
+        wpi::SmallString<255> buf;
+        wpi::raw_svector_ostream errorString{buf};
+        errorString << "Error " << wpi::format("0x%08X", I2C_status)
+                    << ": Could not communicate with Rev 2M sensor over I2C.";
+
+        frc::DriverStation::ReportError(errorString.str());
+    }
 
     Status = VL53L0X_GetVersion(pVersion);
     #ifdef  _DEBUG_
@@ -274,36 +294,41 @@ bool Rev2mDistanceSensor::Initialize(RangeProfile profile) {
     return Status >= 0;
 }
 
-bool Rev2mDistanceSensor::ValidateI2C(void) {
+int32_t Rev2mDistanceSensor::ValidateI2C(void) {
     uint8_t reg = 0xC0, res[2];
 
-    HAL_TransactionI2C(pDevice->port, pDevice->I2cDevAddr >> 1, &reg, 1, res, 1);
+    if(HAL_TransactionI2C(pDevice->port, pDevice->I2cDevAddr >> 1, &reg, 1, res, 1) < 0)
+        return VALIDATE_I2C_HAL_ERR | (1 << 24);
 
     if(*res != 0xEE)
-        return false;
+        return VALIDATE_I2C_PARAM_ERR | (((uint32_t) reg) << 8) | (((uint32_t) res[0]) << 16);
 
     reg = 0xC1;
-    HAL_TransactionI2C(pDevice->port, pDevice->I2cDevAddr >> 1, &reg, 1, res, 1);
+    if(HAL_TransactionI2C(pDevice->port, pDevice->I2cDevAddr >> 1, &reg, 1, res, 1) < 0)
+        return VALIDATE_I2C_HAL_ERR | (1 << 25);
 
     if(*res != 0xAA)
-        return false;
+        return VALIDATE_I2C_PARAM_ERR | (((uint32_t) reg) << 8) | (((uint32_t) res[0]) << 16);
 
     reg = 0xC2;
-    HAL_TransactionI2C(pDevice->port, pDevice->I2cDevAddr >> 1, &reg, 1, res, 1);
+    if(HAL_TransactionI2C(pDevice->port, pDevice->I2cDevAddr >> 1, &reg, 1, res, 1) < 0)
+        return VALIDATE_I2C_HAL_ERR | (1 << 26);
 
     if(*res != 0x10)
-        return false;
+        return VALIDATE_I2C_PARAM_ERR | (((uint32_t) reg) << 8) | (((uint32_t) res[0]) << 16);
 
     reg = 0x51;
-    HAL_TransactionI2C(pDevice->port, pDevice->I2cDevAddr >> 1, &reg, 1, res, 2);
+    if(HAL_TransactionI2C(pDevice->port, pDevice->I2cDevAddr >> 1, &reg, 1, res, 2) < 0)
+        return VALIDATE_I2C_HAL_ERR | (1 << 27);
 
     reg = 0x61;
-    HAL_TransactionI2C(pDevice->port, pDevice->I2cDevAddr >> 1, &reg, 1, res, 2);
+    if(HAL_TransactionI2C(pDevice->port, pDevice->I2cDevAddr >> 1, &reg, 1, res, 2) < 0)
+        return VALIDATE_I2C_HAL_ERR | (1 << 28);
 
     if((res[0] != 0x00) || (res[1] != 0x00))
-        return false;
+        return VALIDATE_I2C_PARAM_ERR | (((uint32_t) reg) << 8) | (((uint32_t) res[0]) << 16) | (((uint32_t) res[1]) << 24);
 
-    return true;
+    return VALIDATE_I2C_SUCCESS;
 }
 
 bool Rev2mDistanceSensor::IsEnabled() const { return m_enabled; }

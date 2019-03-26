@@ -90,13 +90,16 @@ public class Rev2mDistanceSensor extends SendableBase implements PIDSource {
 
         if(port == Port.kOnboard)
             m_port = 0;
-        else if(port == Port.kMXP)
+        else
             m_port = 1;
             
         VL53L0XJNI.Init(m_port, m_addr);
 
-        if(!initialize())
-            DriverStation.reportWarning("Rev 2M sensor did not initialize.", false);
+        if(!initialize()) {
+            DriverStation.reportError(String.format("Error initializing Rev 2M device on port " + 
+                                                    "%s. Please check your connections", 
+                                                    port == Port.kMXP ? "MXP" : "Onboard"), false);
+        }
 
     }
 
@@ -308,9 +311,13 @@ public class Rev2mDistanceSensor extends SendableBase implements PIDSource {
 
     private synchronized boolean initialize() {
         boolean status = false;
+        int statusInt;
 
-        if(VL53L0XJNI.ValidateI2C(m_port, m_addr) != true)
-            DriverStation.reportWarning("Error communicating with Rev 2M sensor over I2C.", false);
+        if((statusInt = VL53L0XJNI.ValidateI2C(m_port, m_addr)) != 0) {
+            DriverStation.reportError(String.format("Error 0x%08X: Could not communicate" +
+                                                    " with Rev 2M sensor over I2C.",
+                                                    statusInt), false);
+        }
 
         status = VL53L0XJNI.DataInit(m_port, m_addr);
 
