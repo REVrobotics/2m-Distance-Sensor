@@ -1,4 +1,5 @@
 # RoboRIO SDK Change Log
+- Improved output error messages for initialization functions in C++ and Java
 
 ## 0.0.5
 - Updated set range profile logic
