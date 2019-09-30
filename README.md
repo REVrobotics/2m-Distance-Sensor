@@ -2,9 +2,9 @@
 roboRIO library for the [Rev Robotics 2m Distance Sensor](http://www.revrobotics.com/rev-31-1505/)
 
 ## Installing For C++/Java 
-Download `REV-2m-Distance-Sensor-roboRIO-SDK-0.0.6.zip` from the release tab and unzip it.
+Download the latest `REV-2m-Distance-Sensor-roboRIO-SDK-[version].zip` from the [release](https://github.com/REVrobotics/2m-Distance-Sensor/releases) tab and unzip it.
 
-Inside `REV-2m-Distance-Sensor-roboRIO-SDK-0.0.6` there will be vendordeps and maven folders. Copy the file `REV2mDistanceSensor.json` under vendordeps to the frc vendordeps folder on your machine. It is typically located in the following places:
+Inside `REV-2m-Distance-Sensor-roboRIO-SDK-[version]` there will be vendordeps and maven folders. Copy the file `REV2mDistanceSensor.json` under vendordeps to the frc vendordeps folder on your machine. It is typically located in the following places:
 * Windows: C:\Users\Public\frc2019\vendordeps
 * Mac/Linux: ~/frc2019/vendordeps
 
