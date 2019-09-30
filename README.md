@@ -1,10 +1,27 @@
 # 2m-Distance-Sensor
 roboRIO library for the [Rev Robotics 2m Distance Sensor](http://www.revrobotics.com/rev-31-1505/)
 
-## Installing
-Please see the installation guide for vendor libraries [here](https://wpilib.screenstepslive.com/s/currentCS/m/getting_started/l/682619-3rd-party-libraries)  
+## Installing For C++/Java 
+Download `REV-2m-Distance-Sensor-roboRIO-SDK-0.0.6.zip` from the release tab and unzip it.
 
-The maven and vendordeps folder for this library can be found under the `Release` folder.
+Inside `REV-2m-Distance-Sensor-roboRIO-SDK-0.0.6` there will be vendordeps and maven folders. Copy the file `REV2mDistanceSensor.json` under vendordeps to the frc vendordeps folder on your machine. It is typically located in the following places:
+* Windows: C:\Users\Public\frc2019\vendordeps
+* Mac/Linux: ~/frc2019/vendordeps
+
+Next, merge the maven folder with the frc maven folder on your machine, typically located at:
+* Windows: C:\Users\Public\frc2019\maven
+* Mac/Linux: ~/frc2019/maven
+
+In order to use these libraries in your robot code, open a project in VsCode. 
+* Press `Ctrl-Shift-P` to open the WPI commands window.
+* Select `WPILib: Manage Vendor Libraries`
+* Select `Install new libraries (offline)`
+* Select the check box next to `REV2mDistanceSensor` and press `OK`
+
+The REV2mDistance sensor library can now be used in your code.
+
+## Installing For LabVIEW
+Download the `rev-2m-distance-sensor_1.0.0-0_windows_x64.nipkg` installer under the releases tab. Simply run the installer and you will have access to REV2mDistanceSensor functions in your projects.
 
 ## Examples
 Examples for this library can be found in the `Examples` folder for both C++ and Java.
