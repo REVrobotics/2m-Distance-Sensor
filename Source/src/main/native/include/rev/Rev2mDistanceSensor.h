@@ -35,7 +35,7 @@
 #include <frc/smartdashboard/SendableBuilder.h>
 #include <frc/PIDSource.h>
 
-#include <HAL/I2C.h>
+#include <hal/I2C.h>
 
 #include "vl53l0x_platform.h"
 #include "vl53l0x_def.h"
