@@ -34,7 +34,7 @@
 #include <wpi/jni_util.h>
 
 #include "vl53l0x_api.h"
-#include <HAL/I2C.h>
+#include <hal/I2C.h>
 
 #define VALIDATE_I2C_SUCCESS    (jint)0
 #define VALIDATE_I2C_PARAM_ERR  (jint)1

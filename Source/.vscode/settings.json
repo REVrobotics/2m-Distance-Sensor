@@ -72,7 +72,8 @@
         "optional": "cpp",
         "string_view": "cpp",
         "vl53l0x_platform.h": "c",
-        "xxatomic": "cpp"
+        "xxatomic": "cpp",
+        "vl53l0x_platform_log.h": "c"
     },
     "java.configuration.updateBuildConfiguration": "automatic"
 }

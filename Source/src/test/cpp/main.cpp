@@ -26,7 +26,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <hal/HAL.h>
+#include <hal/hal.h>
 
 #include "gtest/gtest.h"
 

@@ -29,7 +29,7 @@
 #include "rev/Rev2mDistanceSensor.h"
 #include "vl53l0x_api.h"
 
-#include <hal/HAL.h>
+#include <hal/hal.h>
 #include <hal/I2C.h>
 
 #include <thread>
