@@ -73,7 +73,8 @@
         "string_view": "cpp",
         "vl53l0x_platform.h": "c",
         "xxatomic": "cpp",
-        "vl53l0x_platform_log.h": "c"
+        "vl53l0x_platform_log.h": "c",
+        "i2c.h": "c"
     },
     "java.configuration.updateBuildConfiguration": "automatic"
 }

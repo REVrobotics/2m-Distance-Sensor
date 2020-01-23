@@ -1,16 +1,8 @@
 apply plugin: 'maven-publish'
 
-// Ensure that the WPILibVersioningPlugin is setup by setting the release type, if releaseType wasn't
-// already specified on the command line
-if (!hasProperty('releaseType')) {
-    WPILibVersion {
-        releaseType = 'OFFICIAL'
-    }
-}
-
 ext.licenseFile = files("$rootDir/LICENSE.txt")
 
-def pubVersion = '0.0.6'
+def pubVersion = '0.1.0'
 
 def outputsFolder = file("$buildDir/allOutputs")
 
