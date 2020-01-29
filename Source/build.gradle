@@ -75,7 +75,7 @@ model {
           }
         }
       }
-      nativeUtils.useRequiredLibrary(it, "wpilib_shared")
+      nativeUtils.useRequiredLibrary(it, "driver_shared")
     }
   }
 }
