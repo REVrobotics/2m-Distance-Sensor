@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 REV Robotics
+ * Copyright (c) 2020 REV Robotics
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,14 +32,14 @@ import java.io.IOException;
 
 import edu.wpi.first.wpiutil.RuntimeLoader;
 
-public class RevJNIWrapper  {
+public class DistanceSensorJNIWrapper  {
   static boolean libraryLoaded = false;
-  static RuntimeLoader<RevJNIWrapper> loader = null;
+  static RuntimeLoader<DistanceSensorJNIWrapper> loader = null;
 
   static {
     if (!libraryLoaded) {
       try {
-        loader = new RuntimeLoader<>("DistanceSensorDriver", RuntimeLoader.getDefaultExtractionRoot(), RevJNIWrapper.class);
+        loader = new RuntimeLoader<>("DistanceSensorDriver", RuntimeLoader.getDefaultExtractionRoot(), DistanceSensorJNIWrapper.class);
         loader.loadLibrary();
       } catch (IOException ex) {
         ex.printStackTrace();

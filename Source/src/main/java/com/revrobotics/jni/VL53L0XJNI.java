@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 REV Robotics
+ * Copyright (c) 2020 REV Robotics
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -28,7 +28,7 @@
 
 package com.revrobotics.jni;
 
-public class VL53L0XJNI extends RevJNIWrapper {
+public class VL53L0XJNI extends DistanceSensorJNIWrapper {
   public static native void Init(int port, int addr);
   public static native boolean GetVersion();
   public static native boolean DataInit(int port, int addr);
