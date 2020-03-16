@@ -80,5 +80,5 @@
 		<Item Name="Rev2mDistanceSensorsArray.ctl" Type="VI" URL="../Typedef/Rev2mDistanceSensorsArray.ctl"/>
 		<Item Name="Units.ctl" Type="VI" URL="../Typedef/Units.ctl"/>
 	</Item>
-	<Item Name="libDistanceSensorDriver.so" Type="Document" URL="../../../../../../addons/FRC_ThirdParty/lib/libDistanceSensorDriver.so"/>
+	<Item Name="libDistanceSensorDriver.so" Type="Document" URL="../libDistanceSensorDriver.so"/>
 </Library>
