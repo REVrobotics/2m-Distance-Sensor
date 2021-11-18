@@ -1,5 +1,8 @@
-# 2m-Distance-Sensor
-roboRIO library for the [Rev Robotics 2m Distance Sensor](http://www.revrobotics.com/rev-31-1505/)
+## Notice
+This library has been deprecated, and its functionality has been moved to REVLib.
+
+# REV Robotics 2M Distance Sensor
+roboRIO library for the [REV Robotics 2M Distance Sensor](http://www.revrobotics.com/rev-31-1505/)
 
 ## Installing For C++/Java 
 Download the latest `REV-2m-Distance-Sensor-roboRIO-SDK-[version].zip` from the [release](https://github.com/REVrobotics/2m-Distance-Sensor/releases) tab and unzip it.
