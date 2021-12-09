@@ -277,7 +277,7 @@ VL53L0X_Error VL53L0X_PollingDelay(VL53L0X_DEV Dev){
     /**
      * Per datasheet, function is expected to sleep for ~5ms
      */
-    frc::Wait(0.005);
+    frc::Wait(0.005_s);
     
     return status;
 }

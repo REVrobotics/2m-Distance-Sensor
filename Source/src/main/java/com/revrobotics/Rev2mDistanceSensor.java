@@ -33,13 +33,8 @@ import java.util.List;
 
 import com.revrobotics.jni.VL53L0XJNI;
 
-import edu.wpi.first.wpilibj.smartdashboard.SendableBuilder;
-
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.SendableBase;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.PIDSource;
-import edu.wpi.first.wpilibj.PIDSourceType;
 
 /**
  * Rev2mDistanceSensor class.
@@ -47,7 +42,7 @@ import edu.wpi.first.wpilibj.PIDSourceType;
  * The Distance sensor class is intended to be used with the RevRobotics
  * 2M Distance Sensor.
  */
-public class Rev2mDistanceSensor extends SendableBase implements PIDSource {
+public class Rev2mDistanceSensor {
     public enum Port { kOnboard, kMXP }
     public enum RangeProfile { kDefault, kHighAccuracy, kLongRange, kHighSpeed }
     public enum Unit { kInches, kMillimeters }
@@ -60,7 +55,6 @@ public class Rev2mDistanceSensor extends SendableBase implements PIDSource {
     // task doing the round-robin automatic sensing
     private static Thread m_task;
     private Unit m_units;
-    protected PIDSourceType m_pidSource = PIDSourceType.kDisplacement;
 
     private RangeProfile m_profile = RangeProfile.kDefault;
     private RangeProfile m_newProfile = RangeProfile.kDefault;
@@ -92,12 +86,12 @@ public class Rev2mDistanceSensor extends SendableBase implements PIDSource {
             m_port = 0;
         else
             m_port = 1;
-            
+
         VL53L0XJNI.Init(m_port, m_addr);
 
         if(!initialize()) {
-            DriverStation.reportError(String.format("Error initializing Rev 2M device on port " + 
-                                                    "%s. Please check your connections", 
+            DriverStation.reportError(String.format("Error initializing Rev 2M device on port " +
+                                                    "%s. Please check your connections",
                                                     port == Port.kMXP ? "MXP" : "Onboard"), false);
         }
 
@@ -109,7 +103,7 @@ public class Rev2mDistanceSensor extends SendableBase implements PIDSource {
 
     /**
      * Check if the device is enabled in round robin mode
-     * 
+     *
      * @return  True - Device enabled
      *          False - Device disabled
      */
@@ -119,14 +113,14 @@ public class Rev2mDistanceSensor extends SendableBase implements PIDSource {
 
     /**
      * Turn automatic mode on/off.
-     * 
+     *
      * When automatic mode is on, all enabled sensors will be polled at a set rate.
-     * 
-     * @param enabling  Set to true if round robin scheduling should start. This 
-     *                  will command all sensors to begin measurements in 
+     *
+     * @param enabling  Set to true if round robin scheduling should start. This
+     *                  will command all sensors to begin measurements in
      *                  continuous ranging mode.
-     * 
-     *                  Setting to false will command all sensors to stop 
+     *
+     *                  Setting to false will command all sensors to stop
      *                  measurements.
      */
     public void setAutomaticMode(boolean enabling) {
@@ -163,7 +157,7 @@ public class Rev2mDistanceSensor extends SendableBase implements PIDSource {
 
     /**
      * Determine if the current range is valid.
-     * 
+     *
      * @return  True - current range is valid
      *          False - current range is not valid
      */
@@ -173,7 +167,7 @@ public class Rev2mDistanceSensor extends SendableBase implements PIDSource {
 
     /**
      * Get the range in current units from the sensor.
-     *  
+     *
      * @return range in current units.
      */
     public double getRange() {
@@ -182,12 +176,12 @@ public class Rev2mDistanceSensor extends SendableBase implements PIDSource {
 
     /**
      * Get the range in specified units from the sensor.
-     * 
+     *
      * @param units units in which to return the measurement.
      *              Valid options are:
      *                  kInches
      *                  kMilliMeters
-     *  
+     *
      * @return range in specified units.
      */
     public double getRange(Unit units) {
@@ -202,9 +196,9 @@ public class Rev2mDistanceSensor extends SendableBase implements PIDSource {
     /**
      * Get the timestamp of the current measurement. Measured in seconds
      * since the program began.
-     * 
+     *
      * Uses Timer.GetFPGATimestamp()
-     * 
+     *
      * @return  timestamp of current measurement
      */
     public double getTimestamp() {
@@ -214,7 +208,7 @@ public class Rev2mDistanceSensor extends SendableBase implements PIDSource {
     /**
      * Enable/disable the sensor in round robin scheduling. Automatic mode
      * must be separately enabled/disabled.
-     *  
+     *
      * @param enable    true - enable device
      *                  false - disable device
      */
@@ -228,16 +222,16 @@ public class Rev2mDistanceSensor extends SendableBase implements PIDSource {
      *      kHighAccuracy
      *      kLongRange
      *      kHighSpeed
-     * 
+     *
      * Range profiles are based on timing budgets defined in the VL53L0X
      * datasheet
-     * 
+     *
      * If called in automatic mode, the sensor will be stopped until the
      * new profile is set. Measurements will not be available during this
      * period
-     * 
+     *
      * @param profile The range profile to set in the sensor
-     * 
+     *
      * @return Profile successfully changed
      */
     public boolean setRangeProfile(RangeProfile profile) {
@@ -265,9 +259,9 @@ public class Rev2mDistanceSensor extends SendableBase implements PIDSource {
 
     /**
      * Set the measurement period for the round robin scheduling loop.
-     * 
+     *
      * @param period    Delay in seconds used by the round robin scheduling
-     *                  loop. Should be set to a value larger than the 
+     *                  loop. Should be set to a value larger than the
      *                  measurement timing budget configured in the device, or
      *                  measurements will likely return not ready.
      */
@@ -284,7 +278,7 @@ public class Rev2mDistanceSensor extends SendableBase implements PIDSource {
 
     /**
      * Get the measurement period for the round robin scheduling loop
-     * 
+     *
      * @return measurement period in seconds.
      */
     public double getMeasurementPeriod() {
@@ -351,7 +345,7 @@ public class Rev2mDistanceSensor extends SendableBase implements PIDSource {
         @Override
         public synchronized void run() {
             boolean allStopped;
-            do {    
+            do {
                 allStopped = true;
                 for (Rev2mDistanceSensor sensor: m_sensors) {
                     if(sensor.isEnabled()) {
@@ -412,7 +406,7 @@ public class Rev2mDistanceSensor extends SendableBase implements PIDSource {
                 }
 
                 Timer.delay(m_measurementPeriod);
-            } 
+            }
             while(!allStopped || m_automaticEnabled);
         }
     }
@@ -433,26 +427,12 @@ public class Rev2mDistanceSensor extends SendableBase implements PIDSource {
         }
     }
 
-    @Override
-    public void setPIDSourceType(PIDSourceType pidSource) {
-        if (!pidSource.equals(PIDSourceType.kDisplacement)) {
-        throw new IllegalArgumentException("Only displacement PID is allowed for ultrasonics.");
-        }
-        m_pidSource = pidSource;
-    }
-
-    @Override
-    public PIDSourceType getPIDSourceType() {
-        return m_pidSource;
-    }
-
     /**
-     * Get the range in the current DistanceUnit for the PIDSource base object.
+     * Get the range in the current DistanceUnit.
      *
      * @return The range in DistanceUnit
      */
-    @Override
-    public double pidGet() {
+    public double GetRange() {
         switch (m_units) {
         case kInches:
             return getRangeInches();
@@ -589,11 +569,5 @@ public class Rev2mDistanceSensor extends SendableBase implements PIDSource {
             m_profile = RangeProfile.kDefault;
 
         return status;
-    }
-
-    @Override
-    public void initSendable(SendableBuilder builder) {
-        builder.setSmartDashboardType("Distance");
-        builder.addDoubleProperty("Value", this::getRange, null);
     }
 }

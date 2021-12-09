@@ -39,12 +39,9 @@
 
 #include <frc/Timer.h>
 #include <frc/DriverStation.h>
-#include <frc/smartdashboard/SendableBase.h>
-#include <frc/smartdashboard/SendableBuilder.h>
-#include <frc/Utility.h>
 #include <wpi/SmallString.h>
 #include <wpi/raw_ostream.h>
-#include <wpi/Format.h>
+#include <fmt/format.h>
 
 //#define _DEBUG_
 #define VALIDATE_I2C_SUCCESS    0
@@ -54,10 +51,10 @@
 using namespace rev;
 
 constexpr int Rev2mDistanceSensorAddress = 0x53;
-constexpr double defaultMeasurementPeriod = 0.05;
+constexpr units::time::second_t defaultMeasurementPeriod = 0.05_s;
 
 std::atomic<bool> Rev2mDistanceSensor::m_automaticEnabled{false};
-std::atomic<double> Rev2mDistanceSensor::m_measurementPeriod{defaultMeasurementPeriod};
+std::atomic<units::time::second_t> Rev2mDistanceSensor::m_measurementPeriod{defaultMeasurementPeriod};
 std::vector<Rev2mDistanceSensor*> Rev2mDistanceSensor::m_sensors;
 std::thread Rev2mDistanceSensor::m_thread;
 
@@ -89,10 +86,10 @@ Rev2mDistanceSensor::Rev2mDistanceSensor(Port port, DistanceUnit units, RangePro
         wpi::SmallString<255> buf;
         wpi::raw_svector_ostream errorString{buf};
         errorString << "Error initializing Rev 2M device on port " 
-                    << wpi::format("%s", port == Port::kMXP ? "MXP" : "Onboard")
+                    << fmt::format("%s", port == Port::kMXP ? "MXP" : "Onboard")
                     << ". Please check your connections.";
 
-        frc::DriverStation::ReportError(errorString.str());
+        FRC_ReportError(frc::err::Error, "{}", errorString.str());
     }
 }
 
@@ -127,7 +124,7 @@ double Rev2mDistanceSensor::GetRange(DistanceUnit units) {
     }
 }
 
-double Rev2mDistanceSensor::GetTimestamp(void) {
+units::time::second_t Rev2mDistanceSensor::GetTimestamp(void) {
     return m_timestamp;
 }
 
@@ -168,25 +165,19 @@ bool Rev2mDistanceSensor::SetRangeProfile(RangeProfile profile) {
     }
 }
 
-void Rev2mDistanceSensor::SetMeasurementPeriod(double period) {
-    if(period < 0.01) {
-        period = 0.01;
+void Rev2mDistanceSensor::SetMeasurementPeriod(units::time::second_t period) {
+    if(period < 0.01_s) {
+        period = 0.01_s;
     } 
-    else if(period > 1) {
-        period = 1;
+    else if(period > 1_s) {
+        period = 1_s;
     }
     
     m_measurementPeriod = period;
 }
 
-double Rev2mDistanceSensor::GetMeasurementPeriod(void) {
+units::time::second_t Rev2mDistanceSensor::GetMeasurementPeriod(void) {
     return m_measurementPeriod;
-}
-
-void Rev2mDistanceSensor::SetDistanceUnits(DistanceUnit units) { m_units = units; }
-
-Rev2mDistanceSensor::DistanceUnit Rev2mDistanceSensor::GetDistanceUnits() const {
-  return m_units;
 }
 
 bool Rev2mDistanceSensor::Initialize(RangeProfile profile) {
@@ -210,10 +201,10 @@ bool Rev2mDistanceSensor::Initialize(RangeProfile profile) {
     if((I2C_status = ValidateI2C()) != VALIDATE_I2C_SUCCESS) {
         wpi::SmallString<255> buf;
         wpi::raw_svector_ostream errorString{buf};
-        errorString << "Error " << wpi::format("0x%08X", I2C_status)
+        errorString << "Error " << fmt::format("0x%08X", I2C_status)
                     << ": Could not communicate with Rev 2M sensor over I2C.";
 
-        frc::DriverStation::ReportError(errorString.str());
+        FRC_ReportError(frc::err::Error, "{}" ,errorString.str());
     }
 
     Status = VL53L0X_GetVersion(pVersion);
@@ -523,27 +514,10 @@ void Rev2mDistanceSensor::SetProfile(RangeProfile profile) {
     #endif
 }
 
-void Rev2mDistanceSensor::InitSendable(frc::SendableBuilder& builder) {
-    builder.SetSmartDashboardType("Distance");
-    builder.AddDoubleProperty("Value", [=]() { return GetRange(); }, nullptr);
-}
-
-double Rev2mDistanceSensor::PIDGet() {
-    switch (m_units) {
-        case Rev2mDistanceSensor::kInches:
-            return GetRangeInches();
-        case Rev2mDistanceSensor::kMilliMeters:
-            return GetRangeMM();
-        default:
-            return 0.0;
-    }
-}
-
-void Rev2mDistanceSensor::SetPIDSourceType(frc::PIDSourceType pidSource) {
-    if (wpi_assert(pidSource == frc::PIDSourceType::kDisplacement)) {
-        m_pidSource = pidSource;
-    }
-}
+//void Rev2mDistanceSensor::InitSendable(frc::SendableBuilder& builder) {
+//    builder.SetSmartDashboardType("Distance");
+//    builder.AddDoubleProperty("Value", [=]() { return GetRange(); }, nullptr);
+//}
 
 bool Rev2mDistanceSensor::SetProfileLongRange(void) {
     #ifdef _DEBUG_
