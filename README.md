@@ -1,6 +1,3 @@
-## Notice
-This library has been deprecated, and its functionality has been moved to REVLib.
-
 # REV Robotics 2M Distance Sensor
 roboRIO library for the [REV Robotics 2M Distance Sensor](http://www.revrobotics.com/rev-31-1505/)
 
