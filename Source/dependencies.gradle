@@ -1,9 +1,11 @@
 dependencies {
-    implementation 'edu.wpi.first.cscore:cscore-java:2020.+'
-    implementation 'edu.wpi.first.cameraserver:cameraserver-java:2020.+'
-    implementation 'edu.wpi.first.ntcore:ntcore-java:2020.+'
-    implementation 'edu.wpi.first.wpilibj:wpilibj-java:2020.+'
-    implementation 'edu.wpi.first.wpiutil:wpiutil-java:2020.+'
-    implementation 'edu.wpi.first.hal:hal-java:2020.+'
-    implementation 'edu.wpi.first.thirdparty.frc2020.opencv:opencv-java:3.4.7-2'
+    implementation 'edu.wpi.first.cscore:cscore-java:2022.+'
+    implementation 'edu.wpi.first.cameraserver:cameraserver-java:2022.+'
+    implementation 'edu.wpi.first.ntcore:ntcore-java:2022.+'
+    implementation 'edu.wpi.first.wpilibj:wpilibj-java:2022.+'
+    implementation 'edu.wpi.first.wpiutil:wpiutil-java:2022.+'
+    implementation 'edu.wpi.first.hal:hal-java:2022.+'
+    implementation 'edu.wpi.first.thirdparty.frc2022.opencv:opencv-java:4.5.2-1'
+    testImplementation(platform('org.junit:junit-bom:5.7.0'))
+    testImplementation('org.junit.jupiter:junit-jupiter')
 }

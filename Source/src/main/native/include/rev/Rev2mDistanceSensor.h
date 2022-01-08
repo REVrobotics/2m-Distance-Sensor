@@ -30,11 +30,8 @@
 
 #include <stdint.h>
 
-#include <frc/ErrorBase.h>
-#include <frc/smartdashboard/SendableBase.h>
-#include <frc/smartdashboard/SendableBuilder.h>
-#include <frc/PIDSource.h>
-
+#include <frc/Errors.h>
+#include <frc/Timer.h>
 #include <hal/I2C.h>
 
 #include "vl53l0x_platform.h"
@@ -52,7 +49,7 @@ namespace rev {
  * The Distance sensor class is intended to be used with the RevRobotics
  * 2M Distance Sensor.
  */
-class Rev2mDistanceSensor : public frc::ErrorBase, public frc::SendableBase, public frc::PIDSource {
+class Rev2mDistanceSensor{
     public:
         enum Port { kOnboard = 0, kMXP };
         enum DistanceUnit { kInches = 0, kMilliMeters = 1, kCurrent = 2 };
@@ -72,7 +69,7 @@ class Rev2mDistanceSensor : public frc::ErrorBase, public frc::SendableBase, pub
          */
         Rev2mDistanceSensor(Port port, DistanceUnit units, RangeProfile profile = RangeProfile::kDefault);
 
-        ~Rev2mDistanceSensor() override;
+        ~Rev2mDistanceSensor();// override;
 
         Rev2mDistanceSensor(Rev2mDistanceSensor&&) = default;
         Rev2mDistanceSensor& operator=(Rev2mDistanceSensor&&) = default;
@@ -123,7 +120,7 @@ class Rev2mDistanceSensor : public frc::ErrorBase, public frc::SendableBase, pub
          * 
          * @return  timestamp of current measurement
          */
-        double GetTimestamp(void);
+        units::time::second_t GetTimestamp(void);
 
         /**
          * Enable/disable the sensor in round robin scheduling. Automatic mode
@@ -162,40 +159,16 @@ class Rev2mDistanceSensor : public frc::ErrorBase, public frc::SendableBase, pub
          *                  measurement timing budget configured in the device, or
          *                  measurements will likely return not ready.
          */
-        void SetMeasurementPeriod(double period);
+        void SetMeasurementPeriod(units::time::second_t  period);
 
         /**
          * Get the measurement period for the round robin scheduling loop
          * 
          * @return measurement period in seconds.
          */
-        double GetMeasurementPeriod(void);
+        units::time::second_t GetMeasurementPeriod(void);
 
-        /**
-         * Set the current DistanceUnit that should be used for the PIDSource base
-         * object.
-         *
-         * @param units The DistanceUnit that should be used.
-         */
-        void SetDistanceUnits(DistanceUnit units);
-
-        /**
-         * Get the current DistanceUnit that is used for the PIDSource base object.
-         *
-         * @return The type of DistanceUnit that is being used.
-         */
-        DistanceUnit GetDistanceUnits() const;
-
-        /**
-         * Get the range in the current DistanceUnit for the PIDSource base object.
-         *
-         * @return The range in DistanceUnit
-         */
-        double PIDGet() override;
-
-        void SetPIDSourceType(frc::PIDSourceType pidSource) override;
-
-        void InitSendable(frc::SendableBuilder& builder) override;
+//        void InitSendable(frc::SendableBuilder& builder) ;
 
     private:
         bool Initialize(RangeProfile);
@@ -216,7 +189,7 @@ class Rev2mDistanceSensor : public frc::ErrorBase, public frc::SendableBase, pub
 
         // measurement parameters
         double m_currentRange = -1;
-        double m_timestamp = -1;
+        units::time::second_t m_timestamp = -1_s;
         bool m_rangeValid = false;
 
         // VL53L0X API specific parameters
@@ -232,7 +205,7 @@ class Rev2mDistanceSensor : public frc::ErrorBase, public frc::SendableBase, pub
         RangeProfile m_profile = RangeProfile::kDefault;
         RangeProfile m_newProfile = RangeProfile::kDefault;
 
-        static std::atomic<double> m_measurementPeriod;
+        static std::atomic<units::time::second_t> m_measurementPeriod;
         static std::thread m_thread;
         static std::vector<Rev2mDistanceSensor*> m_sensors;
         static std::atomic<bool> m_automaticEnabled;
