@@ -4,9 +4,9 @@
     "version": "0.4.0",
     "uuid": "9e352acd-4eec-40f7-8490-3357b5ed65ae",
     "mavenUrls": [
-        "http://www.revrobotics.com/content/sw/max/sdk/maven/"
+        "https://www.revrobotics.com/content/sw/max/sdk/maven/"
     ],
-    "jsonUrl": "http://www.revrobotics.com/content/sw/max/sdk/Rev2mDistanceSensor.json",
+    "jsonUrl": "https://www.revrobotics.com/content/sw/max/sdk/Rev2mDistanceSensor.json",
     "javaDependencies": [
         {
             "groupId": "com.revrobotics.frc",
