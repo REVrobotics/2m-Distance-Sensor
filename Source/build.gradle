@@ -89,5 +89,5 @@ javadoc {
 apply from: 'publish.gradle'
 
 wrapper {
-  gradleVersion = '6.0'
+  gradleVersion = '7.2'
 }
