@@ -6,11 +6,12 @@ nativeUtils.withCrossRoboRIO()
 nativeUtils {
   wpi {
     configureDependencies {
-      wpiVersion = "2023.+"
-      wpimathVersion = "2023.+"
-      niLibVersion = "2023.3.0"
-      opencvVersion = "4.6.0-2"
-      googleTestVersion = "1.11.0-3"
+      wpiVersion = "2024.+"
+      opencvYear = "frc2024"
+      googleTestYear = "frc2024"
+      niLibVersion = "2024.2.1"
+      opencvVersion = "4.8.0-2"
+      googleTestVersion = "1.14.0-1"
     }
   }
 }
