@@ -41,7 +41,7 @@
 </Property>
 				<Property Name="NIPKG_installerBuiltBefore" Type="Bool">true</Property>
 				<Property Name="NIPKG_installerDestination" Type="Path">/C/Users/Public/Documents/REV2m-LabVIEW/builds/Installer</Property>
-				<Property Name="NIPKG_lastBuiltPackage" Type="Str">2m-distance-sensor_2024.0.4-0_windows_all.nipkg</Property>
+				<Property Name="NIPKG_lastBuiltPackage" Type="Str">2m-distance-sensor_2025.0.0-0_windows_all.nipkg</Property>
 				<Property Name="NIPKG_license" Type="Ref"></Property>
 				<Property Name="NIPKG_packageVersion" Type="Bool">false</Property>
 				<Property Name="NIPKG_releaseNotes" Type="Str"></Property>
@@ -56,7 +56,7 @@
 				<Property Name="PKG_dependencies[0].Enhanced" Type="Bool">false</Property>
 				<Property Name="PKG_dependencies[0].MaxVersion" Type="Str"></Property>
 				<Property Name="PKG_dependencies[0].MaxVersionInclusive" Type="Bool">false</Property>
-				<Property Name="PKG_dependencies[0].MinVersion" Type="Str">23.3.0.49272-0+f120</Property>
+				<Property Name="PKG_dependencies[0].MinVersion" Type="Str">23.3.5.49154-0+f2</Property>
 				<Property Name="PKG_dependencies[0].MinVersionType" Type="Str">Inclusive</Property>
 				<Property Name="PKG_dependencies[0].NIPKG.DisplayName" Type="Str">LabVIEW Runtime (32-bit)</Property>
 				<Property Name="PKG_dependencies[0].Package.Name" Type="Str">ni-labview-2023-runtime-engine-x86</Property>
@@ -107,7 +107,7 @@
 				<Property Name="PKG_sources[0].ID" Type="Ref">/My Computer/Build Specifications/WPILib Third-Party</Property>
 				<Property Name="PKG_sources[0].Type" Type="Str">Build</Property>
 				<Property Name="PKG_synopsis" Type="Str">REV 2m Distance Sensor LabVIEW API</Property>
-				<Property Name="PKG_version" Type="Str">2024.0.4</Property>
+				<Property Name="PKG_version" Type="Str">2025.0.0</Property>
 			</Item>
 			<Item Name="WPILib Third-Party" Type="Source Distribution">
 				<Property Name="Bld_buildCacheID" Type="Str">{7C52C9E8-1805-4972-9778-4F7F5AEE00E3}</Property>
@@ -126,8 +126,7 @@
 				<Property Name="Bld_localDestDir" Type="Path">/C/Users/Public/Documents/REV2m-LabVIEW/WPILib/ThirdParty</Property>
 				<Property Name="Bld_previewCacheID" Type="Str">{BD7521DF-B566-4760-9656-AE8025F6DCEB}</Property>
 				<Property Name="Bld_removeVIObj" Type="Int">1</Property>
-				<Property Name="Bld_version.major" Type="Int">2024</Property>
-				<Property Name="Bld_version.patch" Type="Int">4</Property>
+				<Property Name="Bld_version.major" Type="Int">2025</Property>
 				<Property Name="Destination[0].destName" Type="Str">Destination Directory</Property>
 				<Property Name="Destination[0].path" Type="Path">/C/Users/Public/Documents/REV2m-LabVIEW/WPILib/ThirdParty</Property>
 				<Property Name="Destination[0].path.type" Type="Str">&lt;none&gt;</Property>
@@ -151,7 +150,7 @@
 				<Property Name="Destination[6].path" Type="Path">/C/Users/Public/Documents/REV2m-LabVIEW/WPILib/ThirdParty/REV Robotics/NI_AB_PROJECTNAME</Property>
 				<Property Name="Destination[6].path.type" Type="Str">&lt;none&gt;</Property>
 				<Property Name="DestinationCount" Type="Int">7</Property>
-				<Property Name="Source[0].itemID" Type="Str">{D5C36313-3364-4D5F-9F59-1895B940C622}</Property>
+				<Property Name="Source[0].itemID" Type="Str">{DC5DF021-9B2F-4FF5-8781-0A6280263A68}</Property>
 				<Property Name="Source[0].type" Type="Str">Container</Property>
 				<Property Name="Source[1].Container.applyDestination" Type="Bool">true</Property>
 				<Property Name="Source[1].Container.applyInclusion" Type="Bool">true</Property>
