@@ -5,12 +5,12 @@ roboRIO library for the [REV Robotics 2M Distance Sensor](http://www.revrobotics
 Download the latest `REV-2m-Distance-Sensor-roboRIO-SDK-[version].zip` from the [release](https://github.com/REVrobotics/2m-Distance-Sensor/releases) tab and unzip it.
 
 Inside `REV-2m-Distance-Sensor-roboRIO-SDK-[version]` there will be vendordeps and maven folders. Copy the file `REV2mDistanceSensor.json` under vendordeps to the frc vendordeps folder on your machine. It is typically located in the following places:
-* Windows: C:\Users\Public\wpilib\2024\vendordeps
-* Mac/Linux: ~/wpilib/2024/vendordeps
+* Windows: C:\Users\Public\wpilib\2025\vendordeps
+* Mac/Linux: ~/wpilib/2025/vendordeps
 
 Next, merge the maven folder with the frc maven folder on your machine, typically located at:
-* Windows: C:\Users\Public\wpilib\2024\maven
-* Mac/Linux: ~/wpilib/2024/maven
+* Windows: C:\Users\Public\wpilib\2025\maven
+* Mac/Linux: ~/wpilib/2025/maven
 
 In order to use these libraries in your robot code, open a project in VsCode. 
 * Press `Ctrl-Shift-P` to open the WPI commands window.

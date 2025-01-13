@@ -28,24 +28,15 @@
 
 package com.revrobotics.jni;
 
+import edu.wpi.first.util.RuntimeLoader;
 import java.io.IOException;
 
-import edu.wpi.first.util.RuntimeLoader;
-
 public class DistanceSensorJNIWrapper  {
-  static boolean libraryLoaded = false;
-  static RuntimeLoader<DistanceSensorJNIWrapper> loader = null;
-
   static {
-    if (!libraryLoaded) {
-      try {
-        loader = new RuntimeLoader<>("DistanceSensorDriver", RuntimeLoader.getDefaultExtractionRoot(), DistanceSensorJNIWrapper.class);
-        loader.loadLibrary();
-      } catch (IOException ex) {
-        ex.printStackTrace();
-        System.exit(1);
-      }
-      libraryLoaded = true;
+    try {
+      RuntimeLoader.loadLibrary("DistanceSensorDriver");
+    } catch (IOException ex) {
+      throw new RuntimeException(ex);
     }
   }
 }
