@@ -2,7 +2,7 @@ apply plugin: 'maven-publish'
 
 ext.licenseFile = files("$rootDir/LICENSE.txt")
 
-def pubVersion = '0.4.0'
+def pubVersion = '2025.0.0'
 
 def outputsFolder = file("$buildDir/allOutputs")
 
@@ -36,8 +36,8 @@ copyAllOutputs.dependsOn outputVersions
 
 ext.addTaskToCopyAllOutputs = { task ->
     copyAllOutputs.dependsOn task
-    copyAllOutputs.inputs.file task.archivePath
-    copyAllOutputs.from task.archivePath
+    copyAllOutputs.inputs.file task.archiveFile
+    copyAllOutputs.from task.archiveFile
 }
 
 def artifactGroupId = 'com.revrobotics.frc'
@@ -47,9 +47,9 @@ def zipBaseName = "_GROUP_com_revrobotics_frc_ID_${baseArtifactId}-cpp_CLS"
 def javaBaseName = "_GROUP_com_revrobotics_frc_ID_${baseArtifactId}-java_CLS"
 
 task cppHeadersZip(type: Zip) {
-    destinationDir = outputsFolder
-    baseName = zipBaseName
-    classifier = "headers"
+    destinationDirectory = outputsFolder
+    archiveBaseName = zipBaseName
+    archiveClassifier = "headers"
 
     from(licenseFile) {
         into '/'
@@ -61,9 +61,9 @@ task cppHeadersZip(type: Zip) {
 }
 
 task cppSourceZip(type: Zip) {
-    destinationDir = outputsFolder
-    baseName = zipBaseName
-    classifier = "source"
+    destinationDirectory = outputsFolder
+    archiveBaseName = zipBaseName
+    archiveClassifier = "sources"
 
     from(licenseFile) {
         into '/'
@@ -75,9 +75,9 @@ task cppSourceZip(type: Zip) {
 }
 
 task cppDriverHeadersZip(type: Zip) {
-    destinationDir = outputsFolder
-    baseName = driverZipBaseName
-    classifier = "headers"
+    destinationDirectory = outputsFolder
+    archiveBaseName = driverZipBaseName
+    archiveClassifier = "headers"
 
     from(licenseFile) {
         into '/'
@@ -96,32 +96,32 @@ build.dependsOn cppDriverHeadersZip
 addTaskToCopyAllOutputs(cppDriverHeadersZip)
 
 task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
+    archiveClassifier = 'sources'
     from sourceSets.main.allSource
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
+    archiveClassifier = 'javadoc'
     from javadoc.destinationDir
 }
 
 task outputJar(type: Jar, dependsOn: classes) {
-    baseName javaBaseName
-    destinationDir outputsFolder
+    archiveBaseName = javaBaseName
+    destinationDirectory = outputsFolder
     from sourceSets.main.output
 }
 
 task outputSourcesJar(type: Jar, dependsOn: classes) {
-    baseName javaBaseName
-    destinationDir outputsFolder
-    classifier = 'sources'
+    archiveBaseName = javaBaseName
+    destinationDirectory = outputsFolder
+    archiveClassifier = 'sources'
     from sourceSets.main.allSource
 }
 
 task outputJavadocJar(type: Jar, dependsOn: javadoc) {
-    baseName javaBaseName
-    destinationDir outputsFolder
-    classifier = 'javadoc'
+    archiveBaseName = javaBaseName
+    destinationDirectory = outputsFolder
+    archiveClassifier = 'javadoc'
     from javadoc.destinationDir
 }
 

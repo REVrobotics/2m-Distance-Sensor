@@ -6,12 +6,13 @@ nativeUtils.withCrossRoboRIO()
 nativeUtils {
   wpi {
     configureDependencies {
-      wpiVersion = "2024.+"
-      opencvYear = "frc2024"
-      googleTestYear = "frc2024"
-      niLibVersion = "2024.2.1"
-      opencvVersion = "4.8.0-2"
-      googleTestVersion = "1.14.0-1"
+        wpiVersion = "2025.+"
+        opencvYear = "frc2025"
+        niLibVersion = "2025.0.0"
+        opencvVersion = "4.10.0-2"
+        wpimathVersion = "2024.+"
+        googleTestYear = "frc2024"
+        googleTestVersion = "1.14.0-1"
     }
   }
 }
@@ -92,7 +93,7 @@ ext.createComponentZipTasks = { components, names, base, type, project, func ->
         def task = project.tasks.create(base + "-${key}", type) {
             description = 'Creates component archive for platform ' + key
             destinationDirectory = outputsFolder
-            classifier = key
+            archiveClassifier = key
             archiveBaseName = '_M_' + base
             duplicatesStrategy = 'exclude'
 
@@ -119,9 +120,9 @@ ext.createAllCombined = { list, name, base, type, project ->
 
     def task = project.tasks.create(base + "-all", type) {
         description = "Creates component archive for all classifiers"
-        destinationDir = outputsFolder
-        classifier = "all"
-        baseName = base
+        destinationDirectory = outputsFolder
+        archiveClassifier = "all"
+        archiveBaseName = base
         duplicatesStrategy = 'exclude'
 
         list.each {

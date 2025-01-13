@@ -1,8 +1,8 @@
 plugins {
     id 'cpp'
     id 'java'
-    id 'edu.wpi.first.wpilib.repositories.WPILibRepositoriesPlugin' version '2020.2'
-    id 'edu.wpi.first.NativeUtils' version '2024.6.1'
+    id 'edu.wpi.first.wpilib.repositories.WPILibRepositoriesPlugin' version '2025.0'
+    id 'edu.wpi.first.NativeUtils' version '2025.9.0'
     id 'edu.wpi.first.GradleJni' version '1.1.0'
     id 'edu.wpi.first.GradleVsCode' version '2.1.0'
     id 'google-test-test-suite'
@@ -83,11 +83,15 @@ model {
 }
 
 javadoc {
-  options.addBooleanOption('-no-module-directories', true) 
+  options {
+      // Just configuring links to WPILib docs also sets up links to the appropriate version of
+      // the JDK docs. Things broke when Harper tried to directly configure both.
+      addStringOption("link", "https://github.wpilib.org/allwpilib/docs/release/java/")
+  }
 }
 
 apply from: 'publish.gradle'
 
 wrapper {
-  gradleVersion = '7.5.1'
+  gradleVersion = '8.11'
 }
