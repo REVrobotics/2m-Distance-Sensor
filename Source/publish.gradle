@@ -2,7 +2,7 @@ apply plugin: 'maven-publish'
 
 ext.licenseFile = files("$rootDir/LICENSE.txt")
 
-def pubVersion = '2025.0.0'
+def pubVersion = '2026.0.0'
 
 def outputsFolder = file("$buildDir/allOutputs")
 
@@ -126,11 +126,13 @@ task outputJavadocJar(type: Jar, dependsOn: javadoc) {
 }
 
 artifacts {
-    archives sourcesJar
-    archives javadocJar
-    archives outputJar
-    archives outputSourcesJar
-    archives outputJavadocJar
+    tasks.named("assemble") {
+        dependsOn(sourcesJar)
+        dependsOn(javadocJar)
+        dependsOn(outputJar)
+        dependsOn(outputSourcesJar)
+        dependsOn(outputJavadocJar)
+    }
 }
 
 addTaskToCopyAllOutputs(outputSourcesJar)
@@ -186,8 +188,8 @@ model {
                 artifact cppSourceZip
 
                 artifactId = "${baseArtifactId}-cpp"
-                groupId artifactGroupId
-                version pubVersion
+                groupId = artifactGroupId
+                version = pubVersion
             }
             driver(MavenPublication) {
                 revDriverTaskList.each {
@@ -199,8 +201,8 @@ model {
                 artifact cppHeadersZip
 
                 artifactId = "${baseArtifactId}-driver"
-                groupId artifactGroupId
-                version pubVersion
+                groupId = artifactGroupId
+                version = pubVersion
             }
 
             java(MavenPublication) {
@@ -209,8 +211,8 @@ model {
                 artifact javadocJar
 
                 artifactId = "${baseArtifactId}-java"
-                groupId artifactGroupId
-                version pubVersion
+                groupId = artifactGroupId
+                version = pubVersion
             }
         }
     }
