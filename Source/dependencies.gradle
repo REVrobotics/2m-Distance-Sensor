@@ -1,12 +1,12 @@
 dependencies {
-    implementation 'edu.wpi.first.cscore:cscore-java:2025.+'
-    implementation 'edu.wpi.first.cameraserver:cameraserver-java:2025.+'
-    implementation 'edu.wpi.first.ntcore:ntcore-java:2025.+'
-    implementation 'edu.wpi.first.wpilibj:wpilibj-java:2025.+'
-    implementation 'edu.wpi.first.wpiutil:wpiutil-java:2025.+'
-    implementation 'edu.wpi.first.wpimath:wpimath-java:2025.+'
-    implementation 'edu.wpi.first.wpiunits:wpiunits-java:2025.+'
-    implementation 'edu.wpi.first.hal:hal-java:2025.+'
+    implementation 'edu.wpi.first.cscore:cscore-java:2026.+'
+    implementation 'edu.wpi.first.cameraserver:cameraserver-java:2026.+'
+    implementation 'edu.wpi.first.ntcore:ntcore-java:2026.+'
+    implementation 'edu.wpi.first.wpilibj:wpilibj-java:2026.+'
+    implementation 'edu.wpi.first.wpiutil:wpiutil-java:2026.+'
+    implementation 'edu.wpi.first.wpimath:wpimath-java:2026.+'
+    implementation 'edu.wpi.first.wpiunits:wpiunits-java:2026.+'
+    implementation 'edu.wpi.first.hal:hal-java:2026.+'
     implementation "org.ejml:ejml-simple:0.43.1"
     implementation "com.fasterxml.jackson.core:jackson-annotations:2.12.4"
     implementation "com.fasterxml.jackson.core:jackson-core:2.12.4"

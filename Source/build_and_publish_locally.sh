@@ -2,7 +2,7 @@
 set -e
 
 LIB=DistanceSensor
-BUILD_YEAR=2025
+BUILD_YEAR=2026
 VENDOR_GENERATED_DIR=./vendordeps/*
 BUILD_REPO_DIR=./build/repos
 RELEASE_DIR=$BUILD_REPO_DIR/releases/com/revrobotics/frc
