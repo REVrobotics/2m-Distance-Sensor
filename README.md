@@ -21,7 +21,7 @@ In order to use these libraries in your robot code, open a project in VsCode.
 The REV2mDistance sensor library can now be used in your code.
 
 ## Installing For LabVIEW
-Download the `rev-2m-distance-sensor_1.0.0-0_windows_x64.nipkg` installer under the releases tab. Simply run the installer and you will have access to REV2mDistanceSensor functions in your projects.
+Download the `rev-2m-distance-sensor_X.X.X-X_windows_x64.nipkg` installer under the releases tab. Simply run the installer and you will have access to REV2mDistanceSensor functions in your projects.
 
 ## Examples
 Examples for this library can be found in the `Examples` folder for both C++ and Java.
